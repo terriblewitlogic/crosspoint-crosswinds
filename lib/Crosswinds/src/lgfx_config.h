@@ -69,7 +69,13 @@ class LGFX : public lgfx::LGFX_Sprite {
   bool init() {
     uint8_t* fb = crosspoint_framebuffer();
     if (!fb) return false;
-    setBuffer(fb, 800, 480, 1);  // grayscale_1bit: white -> 1, as CrossPoint stores it
+    // setBuffer(..., bpp) only retypes the color converter; the sprite panel
+    // keeps its 16-bit default and would write far past the 48000-byte buffer.
+    // Set the depth while no buffer is attached (so nothing is allocated),
+    // then attach CrossPoint's. 1-bit colors are bit 0: white -> 1.
+    deleteSprite();
+    setColorDepth(lgfx::color_depth_t::grayscale_1bit);
+    setBuffer(fb, 800, 480);
     return true;
   }
   void setAutoDisplay(bool) {}

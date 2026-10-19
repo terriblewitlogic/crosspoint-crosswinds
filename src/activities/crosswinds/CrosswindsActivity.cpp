@@ -2,7 +2,11 @@
 
 #include <HalGPIO.h>
 #include <HalPowerManager.h>
+#include <HalStorage.h>
 #include <Logging.h>
+
+#include <cstdio>
+#include <new>
 
 // Game entry points (lib/Crosswinds/src/crosspoint_main.cpp). The game's
 // headers are not included here: they rename `display`, which CrossPoint
@@ -83,6 +87,79 @@ bool board_x4_usb_connected() { return gpio.isUsbConnected(); }
 // back to CrossPoint, which owns sleep and power.
 void board_x4_power_off() { exitRequested = true; }
 void board_x4_shutdown() { exitRequested = true; }
+
+// ---------------------------------------------------------------------------
+// The game's save storage (declared in its save_fs.h): files on the SD card in
+// one hidden folder, through HalStorage so card access is serialised with the
+// reader. The game passes rooted names such as "/sh_company.sav".
+// ---------------------------------------------------------------------------
+
+struct CrosspointFile {
+  HalFile file;
+};
+
+namespace {
+
+constexpr char SAVE_DIR[] = "/.crosspoint/crosswinds";
+
+bool savePath(const char* path, char* out, const size_t cap) {
+  const int n = snprintf(out, cap, "%s%s", SAVE_DIR, path);
+  return n > 0 && static_cast<size_t>(n) < cap;
+}
+
+}  // namespace
+
+bool crosspoint_fs_begin() {
+  if (!Storage.ready()) return false;
+  if (!Storage.exists(SAVE_DIR)) Storage.mkdir(SAVE_DIR);
+  return Storage.exists(SAVE_DIR);
+}
+
+bool crosspoint_fs_exists(const char* path) {
+  char full[96];
+  return savePath(path, full, sizeof(full)) && Storage.exists(full);
+}
+
+bool crosspoint_fs_remove(const char* path) {
+  char full[96];
+  return savePath(path, full, sizeof(full)) && Storage.remove(full);
+}
+
+bool crosspoint_fs_rename(const char* from, const char* to) {
+  char fullFrom[96], fullTo[96];
+  return savePath(from, fullFrom, sizeof(fullFrom)) && savePath(to, fullTo, sizeof(fullTo)) &&
+         Storage.rename(fullFrom, fullTo);
+}
+
+CrosspointFile* crosspoint_fs_open(const char* path, const char* mode) {
+  char full[96];
+  if (!savePath(path, full, sizeof(full))) return nullptr;
+  const oflag_t flags = mode[0] == 'w' ? (O_WRONLY | O_CREAT | O_TRUNC) : (mode[1] == '+' ? O_RDWR : O_RDONLY);
+  HalFile file = Storage.open(full, flags);
+  if (!file) return nullptr;
+  // One handle per open save file, freed by crosspoint_fs_close.
+  auto* handle = new (std::nothrow) CrosspointFile{std::move(file)};
+  if (!handle) LOG_ERR("CW", "OOM opening %s", full);
+  return handle;
+}
+
+size_t crosspoint_fs_read(CrosspointFile* file, void* buf, const size_t len) {
+  const int got = file->file.read(buf, len);
+  return got > 0 ? static_cast<size_t>(got) : 0;
+}
+
+size_t crosspoint_fs_write(CrosspointFile* file, const void* buf, const size_t len) {
+  return file->file.write(buf, len);
+}
+
+bool crosspoint_fs_seek(CrosspointFile* file, const uint32_t pos) { return file->file.seek(pos); }
+
+void crosspoint_fs_flush(CrosspointFile* file) { file->file.flush(); }
+
+void crosspoint_fs_close(CrosspointFile* file) {
+  file->file.close();
+  delete file;
+}
 
 // ---------------------------------------------------------------------------
 // Activity

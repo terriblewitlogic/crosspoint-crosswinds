@@ -9,6 +9,7 @@
 #include <esp_random.h>
 #include "game.h"
 #include "display.h"
+#include "save_fs.h"
 #include "x4.h"
 
 bool g_bootResumed = false;
@@ -36,11 +37,54 @@ static void advance_live_clock(uint32_t now) {
 
 void board_x4_sync_active_clock() { advance_live_clock(millis()); }
 
+// The first CrossPoint builds kept saves in LittleFS on CrossPoint's unused
+// flash data partition. A company found there moves to the SD card once; the
+// flash copies are then renamed so a later campaign reset cannot revive them.
+static const char* const FLASH_SAVES[] = {
+  "/sh_company.sav", "/sh_company.bak",
+  "/sh_fleet.sav", "/sh_ports.sav", "/sh_jobs.sav", "/sh_log.sav", "/sh_core.sav",
+  "/sh_fleet.bak", "/sh_ports.bak", "/sh_jobs.bak", "/sh_log.bak", "/sh_core.bak"
+};
+
+static void import_flash_company() {
+  if (save_exists()) return;              // the SD card already holds a company
+  if (!LittleFS.begin(false)) return;     // never format: no filesystem, nothing to import
+  bool copied = false, failed = false;
+  for (const char* path : FLASH_SAVES) {
+    if (!LittleFS.exists(path)) continue;
+    File in = LittleFS.open(path, "r");
+    SaveFile out = SAVE_FS.open(path, "w");
+    bool ok = in && out;
+    uint8_t chunk[256];
+    size_t got;
+    while (ok && (got = in.read(chunk, sizeof(chunk))) > 0) ok = out.write(chunk, got) == got;
+    in.close();
+    out.close();
+    if (ok) copied = true;
+    else { failed = true; SAVE_FS.remove(path); }
+  }
+  if (copied && !failed && save_exists()) {
+    for (const char* path : FLASH_SAVES) {
+      if (!LittleFS.exists(path)) continue;
+      char done[40];
+      snprintf(done, sizeof(done), "%s.imported", path);
+      LittleFS.remove(done);
+      LittleFS.rename(path, done);
+    }
+    Serial.println("Crosswinds: moved the company from flash to the SD card.");
+  } else if (copied || failed) {
+    // All or nothing: drop partial copies so the next start tries again.
+    for (const char* path : FLASH_SAVES) SAVE_FS.remove(path);
+    Serial.println("Crosswinds: could not move the flash company; it stays in flash.");
+  }
+  LittleFS.end();
+}
+
 bool crosswinds_start() {
+  g_bootResumed = false;  // every launch decides afresh
   if (!display_begin()) { Serial.println("Crosswinds: no framebuffer"); return false; }
-  // CrossPoint keeps its own files on the SD card and leaves the flash data
-  // partition unmounted; the first start formats it for the game's saves.
-  if (!LittleFS.begin(true) || !save_begin()) Serial.println("Crosswinds: persistence unavailable");
+  if (save_begin()) import_flash_company();
+  else Serial.println("Crosswinds: persistence unavailable");
 
   if (save_exists() && save_read()) {
     g_bootResumed = true;

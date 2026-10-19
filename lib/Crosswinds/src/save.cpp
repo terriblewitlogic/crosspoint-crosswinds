@@ -1,7 +1,7 @@
 #include "game.h"
 #include "story_content.h"
 #include "atlas_content.h"
-#include <LittleFS.h>
+#include "save_fs.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -860,31 +860,31 @@ static bool write_chunk(uint8_t id) {
   size_t len = build_chunk(id);
   if (!len || !buf) return false;
   uint32_t crc = crc32(buf, len);
-  if (crc == lastCrc[id] && currentTrusted[id] && LittleFS.exists(CH_PATH[id])) return true;
+  if (crc == lastCrc[id] && currentTrusted[id] && SAVE_FS.exists(CH_PATH[id])) return true;
   uint8_t h[16]{};
   header_put(h, 0, CH_MAGIC); h[4] = id; h[5] = emitVersion;
   header_put(h, 8, (uint32_t)len); header_put(h, 12, crc);
-  File f = LittleFS.open(TMP_PATH, "w");
+  SaveFile f = SAVE_FS.open(TMP_PATH, "w");
   if (!f) return false;
   bool ok = f.write(h, sizeof(h)) == sizeof(h) && f.write(buf, len) == len;
   f.close();
-  if (!ok) { LittleFS.remove(TMP_PATH); return false; }
+  if (!ok) { SAVE_FS.remove(TMP_PATH); return false; }
 
-  bool hadTrustedCurrent = currentTrusted[id] && LittleFS.exists(CH_PATH[id]);
+  bool hadTrustedCurrent = currentTrusted[id] && SAVE_FS.exists(CH_PATH[id]);
   if (hadTrustedCurrent) {
-    LittleFS.remove(BAK_PATH[id]);
-    if (!LittleFS.rename(CH_PATH[id], BAK_PATH[id])) {
-      LittleFS.remove(TMP_PATH);
+    SAVE_FS.remove(BAK_PATH[id]);
+    if (!SAVE_FS.rename(CH_PATH[id], BAK_PATH[id])) {
+      SAVE_FS.remove(TMP_PATH);
       return false;
     }
-  } else if (LittleFS.exists(CH_PATH[id])) {
-    LittleFS.remove(CH_PATH[id]);
+  } else if (SAVE_FS.exists(CH_PATH[id])) {
+    SAVE_FS.remove(CH_PATH[id]);
   }
-  if (!LittleFS.rename(TMP_PATH, CH_PATH[id])) {
-    if (!LittleFS.exists(CH_PATH[id]) && LittleFS.exists(BAK_PATH[id]))
-      LittleFS.rename(BAK_PATH[id], CH_PATH[id]);
-    LittleFS.remove(TMP_PATH);
-    currentTrusted[id] = LittleFS.exists(CH_PATH[id]);
+  if (!SAVE_FS.rename(TMP_PATH, CH_PATH[id])) {
+    if (!SAVE_FS.exists(CH_PATH[id]) && SAVE_FS.exists(BAK_PATH[id]))
+      SAVE_FS.rename(BAK_PATH[id], CH_PATH[id]);
+    SAVE_FS.remove(TMP_PATH);
+    currentTrusted[id] = SAVE_FS.exists(CH_PATH[id]);
     return false;
   }
   if (crc != lastCrc[id]) prevCrc[id] = lastCrc[id];  // the generation now in .bak
@@ -895,8 +895,8 @@ static bool write_chunk(uint8_t id) {
 #endif
 
 static bool read_chunk_path(uint8_t id, const char* path, bool isCurrent, bool enforceExpected) {
-  if (!LittleFS.exists(path)) return false;
-  File f = LittleFS.open(path, "r");
+  if (!SAVE_FS.exists(path)) return false;
+  SaveFile f = SAVE_FS.open(path, "r");
   if (!f) return false;
   uint8_t h[16];
   if (f.read(h, sizeof(h)) != sizeof(h)) { f.close(); return false; }
@@ -992,7 +992,7 @@ static bool valid_package_links() {
 
 static bool scan_snapshot(const char* path, bool apply, uint32_t* generation,
                           uint32_t* crcs, uint8_t* wireVersion = nullptr) {
-  File f = LittleFS.open(path, "r");
+  SaveFile f = SAVE_FS.open(path, "r");
   if (!f) return false;
   uint8_t h[16];
   bool ok = f.read(h, 16) == 16;
@@ -1039,7 +1039,7 @@ static bool read_snapshot(const char* path, bool trusted) {
 
 static bool write_snapshot() {
   uint32_t crcs[CH_COUNT]{};
-  bool same = snapshotTrusted && LittleFS.exists(SNAP_PATH);
+  bool same = snapshotTrusted && SAVE_FS.exists(SNAP_PATH);
   for (uint8_t id = 0; id < CH_COUNT; ++id) {
     size_t len = build_chunk(id);
     if (!len) return false;
@@ -1047,7 +1047,7 @@ static bool write_snapshot() {
     same &= crcs[id] == snapshotCrc[id];
   }
   if (same) return true;
-  File f = LittleFS.open(SNAP_TMP, "w");
+  SaveFile f = SAVE_FS.open(SNAP_TMP, "w");
   if (!f) return false;
   uint8_t h[16]{};
   header_put(h, 0, snapshot_magic(emitVersion, false)); h[4] = emitVersion; h[5] = CH_COUNT;
@@ -1069,15 +1069,15 @@ static bool write_snapshot() {
   ok = ok && f.write(h, 16) == 16;
   f.flush(); f.close();
   if (!ok || !scan_snapshot(SNAP_TMP, false, nullptr, nullptr)) {
-    LittleFS.remove(SNAP_TMP); return false;
+    SAVE_FS.remove(SNAP_TMP); return false;
   }
-  if (snapshotTrusted && LittleFS.exists(SNAP_PATH)) {
-    LittleFS.remove(SNAP_BAK);
-    if (!LittleFS.rename(SNAP_PATH, SNAP_BAK)) return false;
-  } else if (LittleFS.exists(SNAP_PATH)) {
-    if (!LittleFS.remove(SNAP_PATH)) return false;
+  if (snapshotTrusted && SAVE_FS.exists(SNAP_PATH)) {
+    SAVE_FS.remove(SNAP_BAK);
+    if (!SAVE_FS.rename(SNAP_PATH, SNAP_BAK)) return false;
+  } else if (SAVE_FS.exists(SNAP_PATH)) {
+    if (!SAVE_FS.remove(SNAP_PATH)) return false;
   }
-  if (!LittleFS.rename(SNAP_TMP, SNAP_PATH)) {
+  if (!SAVE_FS.rename(SNAP_TMP, SNAP_PATH)) {
     snapshotTrusted = false;
     return false;  // the previous committed bundle remains in .bak
   }
@@ -1088,7 +1088,7 @@ static bool write_snapshot() {
 }
 
 bool save_begin() {
-  mounted = LittleFS.begin(false);  // an unreadable filesystem must never erase a company
+  mounted = SAVE_FS.begin(false);  // an unreadable filesystem must never erase a company
   if (!mounted) return false;
   if (!buf) buf = (uint8_t*)malloc(BUF_CAP);
   memset(lastCrc, 0, sizeof(lastCrc));
@@ -1103,8 +1103,8 @@ bool save_begin() {
 }
 
 bool save_exists() {
-  return mounted && (LittleFS.exists(SNAP_PATH) || LittleFS.exists(SNAP_BAK) ||
-    LittleFS.exists(CH_PATH[CH_CORE]) || LittleFS.exists(BAK_PATH[CH_CORE]));
+  return mounted && (SAVE_FS.exists(SNAP_PATH) || SAVE_FS.exists(SNAP_BAK) ||
+    SAVE_FS.exists(CH_PATH[CH_CORE]) || SAVE_FS.exists(BAK_PATH[CH_CORE]));
 }
 
 void save_suspend(bool suspended) { writesSuspended = suspended; }
@@ -1118,7 +1118,7 @@ bool save_write() {
 bool save_read() {
   if (!mounted || !buf) return false;
   snapshotTrusted = false;
-  if (LittleFS.exists(SNAP_PATH) || LittleFS.exists(SNAP_BAK)) {
+  if (SAVE_FS.exists(SNAP_PATH) || SAVE_FS.exists(SNAP_BAK)) {
     if (!read_snapshot(SNAP_PATH, true) && !read_snapshot(SNAP_BAK, false)) return false;
   } else {
     // Migrate only a coherent legacy generation; leave all old files intact.
@@ -1140,11 +1140,11 @@ bool save_read() {
 bool save_reset() {
   if (!mounted) return false;
   for (int i = 0; i < CH_COUNT; ++i) {
-    LittleFS.remove(CH_PATH[i]);
-    LittleFS.remove(BAK_PATH[i]);
+    SAVE_FS.remove(CH_PATH[i]);
+    SAVE_FS.remove(BAK_PATH[i]);
   }
-  LittleFS.remove(TMP_PATH);
-  LittleFS.remove(SNAP_PATH); LittleFS.remove(SNAP_BAK); LittleFS.remove(SNAP_TMP);
+  SAVE_FS.remove(TMP_PATH);
+  SAVE_FS.remove(SNAP_PATH); SAVE_FS.remove(SNAP_BAK); SAVE_FS.remove(SNAP_TMP);
   snapshotGeneration = 0; snapshotTrusted = false;
   memset(snapshotCrc, 0, sizeof(snapshotCrc));
   memset(lastCrc, 0, sizeof(lastCrc));
@@ -1164,19 +1164,19 @@ void save_quarantine() {
   for (int i = 0; i < CH_COUNT; ++i) {
     const char* paths[2] = { CH_PATH[i], BAK_PATH[i] };
     for (int k = 0; k < 2; ++k) {
-      if (!LittleFS.exists(paths[k])) continue;
+      if (!SAVE_FS.exists(paths[k])) continue;
       snprintf(orphan, sizeof(orphan), "%s.orphan", paths[k]);
-      LittleFS.remove(orphan);
-      LittleFS.rename(paths[k], orphan);
+      SAVE_FS.remove(orphan);
+      SAVE_FS.rename(paths[k], orphan);
     }
   }
-  LittleFS.remove(TMP_PATH);
+  SAVE_FS.remove(TMP_PATH);
   const char* snapshots[2] = {SNAP_PATH, SNAP_BAK};
-  for (const char* path : snapshots) if (LittleFS.exists(path)) {
+  for (const char* path : snapshots) if (SAVE_FS.exists(path)) {
     snprintf(orphan, sizeof(orphan), "%s.orphan", path);
-    LittleFS.remove(orphan); LittleFS.rename(path, orphan);
+    SAVE_FS.remove(orphan); SAVE_FS.rename(path, orphan);
   }
-  LittleFS.remove(SNAP_TMP);
+  SAVE_FS.remove(SNAP_TMP);
   snapshotGeneration = 0; snapshotTrusted = false;
   memset(snapshotCrc, 0, sizeof(snapshotCrc));
   memset(lastCrc, 0, sizeof(lastCrc));
@@ -1196,7 +1196,7 @@ bool save_selftest() {
   constexpr uint8_t SAVE_TEST_LOADED_ECONOMY = 1;
 #endif
   auto corrupt = [](const char* path) {
-    File f = LittleFS.open(path, "r+");
+    SaveFile f = SAVE_FS.open(path, "r+");
     if (!f || !f.seek(20)) { f.close(); return false; }
     uint8_t value = 0;
     if (f.read(&value, 1) != 1 || !f.seek(20)) { f.close(); return false; }
@@ -1288,7 +1288,7 @@ bool save_selftest() {
     g_ports[0].bookingUsed[GOOD_GRAIN] = 8;
     snprintf(g_ships[0].name, sizeof(g_ships[0].name), "Whole B");
     ok &= save_write();
-    File f = LittleFS.open(SNAP_PATH, "r+");
+    SaveFile f = SAVE_FS.open(SNAP_PATH, "r+");
     size_t at = 16;
     uint8_t h[16];
     for (int i = 0; i <= broken && ok; ++i) {
@@ -1313,10 +1313,10 @@ bool save_selftest() {
   // rotating the current bundle but before its replacement still loads .bak.
   save_reset(); sim_new_campaign(0xA700u); g_campaign.coins = 7100;
   ok &= save_write();
-  { File f = LittleFS.open(SNAP_TMP, "w"); uint8_t partial[9]{};
+  { SaveFile f = SAVE_FS.open(SNAP_TMP, "w"); uint8_t partial[9]{};
     ok &= f && f.write(partial, sizeof(partial)) == sizeof(partial); f.close(); }
   g_campaign.coins = 0; ok &= save_read() && g_campaign.coins == 7100;
-  ok &= LittleFS.rename(SNAP_PATH, SNAP_BAK);
+  ok &= SAVE_FS.rename(SNAP_PATH, SNAP_BAK);
   g_campaign.coins = 0; ok &= save_read() && g_campaign.coins == 7100;
   ok &= save_write() && save_read() && g_campaign.coins == 7100;
   step("interrupted write and rename recovery");
@@ -1480,14 +1480,14 @@ bool save_selftest() {
   sim_new_campaign(0xC0DEu);
   ok &= save_write();
   {
-    File f = LittleFS.open(SNAP_PATH, "r+");
+    SaveFile f = SAVE_FS.open(SNAP_PATH, "r+");
     uint8_t ancient = 1;  // below CH_OLDEST_VERSION
     ok &= f && f.seek(5) && f.write(&ancient, 1) == 1;
     f.close();
   }
   ok &= !save_read();
   save_quarantine();
-  ok &= !save_exists() && !LittleFS.exists(SNAP_PATH) && LittleFS.exists("/sh_company.sav.orphan");
+  ok &= !save_exists() && !SAVE_FS.exists(SNAP_PATH) && SAVE_FS.exists("/sh_company.sav.orphan");
   step("unreadable save is quarantined");
   save_reset();
 
@@ -1511,7 +1511,7 @@ bool save_selftest() {
     (g_campaign.legacyFeatureMask & (1u << FEATURE_WAREHOUSE)) &&
     g_campaign.stageSeen >= 3 && g_ships[0].cargo[0].sourcePort == NO_PORT &&
     g_ships[0].cargo[0].contractId == 2 && g_ships[0].booking.state == BOOKING_NONE;
-  ok &= save_write() && LittleFS.exists(CH_PATH[CH_CORE]) && save_read();
+  ok &= save_write() && SAVE_FS.exists(CH_PATH[CH_CORE]) && save_read();
   ok &= g_campaign.coins == 8123 && g_ships[0].cargo[0].contractId == 2;
   step("v7 migration preserves assets, debt, basis and source backup");
   save_reset();

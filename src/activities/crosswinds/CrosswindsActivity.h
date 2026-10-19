@@ -2,6 +2,7 @@
 
 #ifdef CROSSWINDS_ENABLED
 
+#include "HoldTimer.h"
 #include "activities/Activity.h"
 
 // Runs the Crosswinds game (lib/Crosswinds) as a full-screen activity.
@@ -11,7 +12,7 @@
 class CrosswindsActivity final : public Activity {
   bool started = false;
   bool leaving = false;
-  unsigned long backDownSince = 0;
+  HoldTimer backHold;
 
  public:
   explicit CrosswindsActivity(GfxRenderer& renderer, MappedInputManager& mappedInput)

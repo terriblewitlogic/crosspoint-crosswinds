@@ -19,6 +19,7 @@ void crosswinds_stop();
 namespace {
 
 constexpr unsigned long EXIT_HOLD_MS = 1200;
+constexpr unsigned long HOLD_STEP_CAP_MS = 100;
 constexpr uint8_t GAME_BUTTONS = 6;  // BACK, CONFIRM, LEFT, RIGHT, UP, DOWN; POWER stays CrossPoint's
 
 GfxRenderer* bridgeRenderer = nullptr;
@@ -173,7 +174,7 @@ void CrosswindsActivity::onEnter() {
   exitRequested = false;
   leaving = false;
   queueCount = 0;
-  backDownSince = 0;
+  backHold.reset();
   {
     RenderLock lock(*this);
     started = crosswinds_start();
@@ -210,14 +211,8 @@ void CrosswindsActivity::loop() {
     if (gpio.wasPressed(b)) pushPress(b);
   }
 
-  if (gpio.isPressed(HalGPIO::BTN_BACK)) {
-    if (backDownSince == 0) {
-      backDownSince = millis();
-    } else if (millis() - backDownSince >= EXIT_HOLD_MS) {
-      exitRequested = true;
-    }
-  } else {
-    backDownSince = 0;
+  if (backHold.update(gpio.isPressed(HalGPIO::BTN_BACK), millis(), EXIT_HOLD_MS, HOLD_STEP_CAP_MS)) {
+    exitRequested = true;
   }
 
   if (exitRequested) {

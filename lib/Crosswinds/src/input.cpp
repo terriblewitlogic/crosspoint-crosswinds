@@ -457,7 +457,12 @@ static void handle_footer(int id) {
       } else if (id == 2) g_ui.card = CARD_NONE;
       break;
     case CARD_MENU:
+#if defined(SH_CROSSPOINT)
+      // QUIT: CrossPoint saves on the way out and returns to its Home.
+      if (id == 0) { g_ui.confirmReset = 0; save_write(); board_x4_power_off(); }
+#else
       if (id == 0) { save_write(); g_ui.confirmReset = 0; }
+#endif
 #if defined(SH_X4)
       else if (id == 1) { g_ui.confirmReset = 0; open_card(CARD_JOURNAL); }
 #else
@@ -1431,7 +1436,7 @@ static int return_priority(const ReturnRow& row) {
 
 bool x4_return_away() { return returnAway; }
 
-void x4_prepare_return(bool resumed, bool away) {
+void x4_prepare_return(bool resumed, bool away, bool keepTitle) {
   // A boot creates a new input session even when there is nothing to report.
   if (resumed) x4LastInputMs = millis();
   if (g_ui.title || (returnActive && !x4_return_report())) returnActive = false;
@@ -1475,7 +1480,9 @@ void x4_prepare_return(bool resumed, bool away) {
     returnOrder[at] = ship;
   }
   returnActive = true; returnAway = away;
-  g_ui.title = 0; g_ui.scene = SCENE_COMPANY; g_ui.card = CARD_NONE;
+  // keepTitle: the report opens behind the title, and OK on the title shows it.
+  if (!keepTitle) g_ui.title = 0;
+  g_ui.scene = SCENE_COMPANY; g_ui.card = CARD_NONE;
   g_ui.page = 0; g_ui.returnQuiet = 1;
   if (returnReport.preferredShip < g_campaign.shipCount) {
     g_ui.selectedShip = returnReport.preferredShip;

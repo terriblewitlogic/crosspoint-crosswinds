@@ -1849,7 +1849,11 @@ static void draw_menu_card() {
        (row == 5 ? (g_ui.confirmReset ? "OK again erases company" : "Erase and start again") : row==0 && g_campaign.economyVersion>=2 ? "Safe passage: automatic / No spending" : nullptr));
     row_text(row, label, detail, INK, selected);
   }
+#if defined(SH_CROSSPOINT)
+  draw_button(CARD_FOOTER[0], "QUIT");
+#else
   draw_button(CARD_FOOTER[0], "SAVE");
+#endif
   draw_button(CARD_FOOTER[1], "JOURNAL");
   draw_button(CARD_FOOTER[2], "BACK");
 }
@@ -1882,7 +1886,9 @@ static void draw_help_card() {
       "Select a good: UP + / DOWN - / OK confirm.",
       "Parcels are free; one space each.",
       "Hazards use the shown safe fallback.",
-#if SH_X4_VOYAGE_STANDBY
+#if defined(SH_CROSSPOINT)
+      "Hold BACK to quit; voyages wait for you."
+#elif SH_X4_VOYAGE_STANDBY
       "POWER: voyages continue in standby."
 #else
       "POWER saves; voyages pause while off."
@@ -1902,7 +1908,11 @@ static void draw_help_card() {
     nullptr,
     "Travel times: real minutes at your speed.",
     "NOTICES: arrivals, incidents and repairs.",
+#if defined(SH_CROSSPOINT)
+    "Hold BACK to quit; voyages wait for you."
+#else
     "POWER saves; voyages pause while off."
+#endif
   };
   for (int row = 0; row < CARD_VISIBLE_ROWS; ++row)
     row_text(row, row == 2 ? jobs : lines[row]);

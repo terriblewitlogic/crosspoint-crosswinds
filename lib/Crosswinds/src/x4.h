@@ -111,7 +111,7 @@ static constexpr uint32_t X4_RETURN_IDLE_MS = 15u * 60u * 1000u;
 struct ReturnReport;
 // After load/standby reconciliation or a long idle (away), or when COMPANY
 // opens pending updates mid-session (not away).
-void x4_prepare_return(bool resumed, bool away = true);
+void x4_prepare_return(bool resumed, bool away = true, bool keepTitle = false);
 bool x4_return_away();  // the report greets a returning reader
 
 // A completed NEXT GOAL rung takes the whole screen over whatever is open

@@ -55,7 +55,9 @@ bool crosswinds_start() {
     Serial.printf("Crosswinds: new company, seed %08lx\n", (unsigned long)seed);
   }
 
-  x4_prepare_return(g_bootResumed);
+  // Opening the game from CrossPoint's Home is a deliberate start, so the
+  // title comes first even when a Company update is waiting behind it.
+  x4_prepare_return(g_bootResumed, true, true);
   lastInput = lastSimulation = lastAutosave = millis();
   activeClockReady = true;
   render_frame();

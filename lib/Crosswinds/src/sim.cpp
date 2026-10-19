@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <new>
 
 static void compact_contracts(uint8_t port);  // keeps each port's contract board gap-free
 static void gain_captain_xp(Ship& s, uint16_t amount);
@@ -16,19 +17,31 @@ static void merchant_refresh_packages(uint8_t port);
 static uint32_t returnCompanyEpoch = 0;
 
 Campaign g_campaign;
+#if defined(SH_CROSSPOINT)
+GameTables* g_tables = nullptr;
+bool game_tables_claim() {
+  // Value-initialised like the static arrays it replaces.
+  if (!g_tables) g_tables = new (std::nothrow) GameTables();
+  return g_tables != nullptr;
+}
+void game_tables_release() { delete g_tables; g_tables = nullptr; }
+#else
 PortState g_ports[MAX_PORTS];
 Contract g_contracts[MAX_PORTS][MAX_CONTRACTS_PER_PORT];
 Ship g_ships[MAX_SHIPS];
+#endif
 Incident g_incident;
 IncidentOutcome g_incidentOutcome;
 Incident g_incidentQueue[MAX_INCIDENTS];
 uint8_t g_incidentQueueCount = 0;
+#if !defined(SH_CROSSPOINT)
 JournalEntry g_journal[MAX_JOURNAL];
+AttentionEntry g_attention[MAX_ATTENTION];
+CaptainProfile g_captains[MAX_CAPTAINS];
+#endif
 uint8_t g_journalHead = 0;
 uint8_t g_journalCount = 0;
-AttentionEntry g_attention[MAX_ATTENTION];
 uint8_t g_attentionCount = 0;
-CaptainProfile g_captains[MAX_CAPTAINS];
 RoutePreparation g_routePreparation;
 UiState g_ui;
 

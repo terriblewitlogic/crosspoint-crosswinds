@@ -1393,7 +1393,11 @@ static bool x4InputPending = false;
 
 // Presentation is frozen while it is read. The engine owns durable counters;
 // this controller owns only navigation and the interrupted, uncommitted draft.
+#if defined(SH_CROSSPOINT)
+#define returnReport (g_tables->returnReport)  // in the block claimed on open
+#else
 static ReturnReport returnReport{};
+#endif
 #include "input_merchant_x4.h"
 #include "input_navigation_x4.h"
 

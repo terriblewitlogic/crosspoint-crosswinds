@@ -248,7 +248,11 @@ static void native_art_at(int x, int y, const X4Art& art) {
   if (!mask) {bitmap_at(x,y,art.data,art.width,art.height,INK);return;}
   // Fixed reusable buffer, not an 8KB stack allocation. Opaque interior whites
   // conceal underlying routes; exterior paper stays transparent in one blit.
+#if defined(SH_CROSSPOINT)
+  uint8_t* pixels=g_tables->artScratch;  // claimed with the game's tables
+#else
   static uint8_t pixels[192*168/4];
+#endif
   if (art.width>192 || art.height>168) return;
   int stride=(art.width+3)/4, sourceStride=(art.width+7)/8;
   memset(pixels,0,stride*art.height);
@@ -1339,8 +1343,14 @@ static void draw_route_miniature(const Ship& ship, int prospective) {
   display.setClipRect(r.x, r.y, r.w, r.h);
   // The renderer is single-threaded. Keep this fixed scratch space out of the
   // ESP32-C3 loop task's stack, leaving room for font and panel-driver calls.
+#if defined(SH_CROSSPOINT)
+  // Shares native_art_at's scratch: the two never draw at the same time.
+  static_assert(sizeof(GameTables::artScratch) >= 52 * 74, "miniature needs 52x74 bytes");
+  uint8_t* bits = g_tables->artScratch;
+#else
   static uint8_t bits[52 * 74];
-  memset(bits, 0, sizeof(bits));
+#endif
+  memset(bits, 0, 52 * 74);
   for (int y = 0; y < r.h; ++y) {
     for (int x = 0; x < r.w; ++x) {
       bool ink = false;
@@ -2558,12 +2568,16 @@ static void push_frame(bool startupStamp = false, bool screenChange = true) {
   if (full) display.display(0, 0, IW, IH);
   else display.display();
   display.waitDisplay();
+#if !defined(SH_CROSSPOINT)
+  // A cold boot stamps twice to clear the previous firmware's image. Inside
+  // CrossPoint the game opens from Home, and one clean refresh is enough.
   if (startupStamp) {
     // A bare display() is a no-op after the driver clears its dirty range.
     display.display(0, 0, IW, IH);
     display.waitDisplay();
     Serial.println("X4 display: startup double stamp complete");
   }
+#endif
   if (full) { fullRefreshPending = false; partialCount = 0; }
   else ++partialCount;
 #ifdef SH_HOST_TESTS

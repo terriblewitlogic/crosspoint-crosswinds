@@ -1111,6 +1111,9 @@ void save_suspend(bool suspended) { writesSuspended = suspended; }
 
 bool save_write() {
   if (writesSuspended) return true;
+#if defined(SH_CROSSPOINT)
+  if (!g_tables) return false;  // the game is closed: its tables belong to the reader
+#endif
   if (!mounted || !buf) return false;
   return write_snapshot();
 }

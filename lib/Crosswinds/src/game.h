@@ -763,21 +763,49 @@ struct AtlasState {
   uint8_t migrate;            // not saved: a pre-Atlas save awaits sim_atlas_migrate
 };
 extern AtlasState g_atlas;
+#if !defined(SH_CROSSPOINT)
 extern PortState g_ports[MAX_PORTS];
 extern Contract g_contracts[MAX_PORTS][MAX_CONTRACTS_PER_PORT];
 extern Ship g_ships[MAX_SHIPS];
+#endif
 extern Incident g_incident;
 extern IncidentOutcome g_incidentOutcome;
 extern Incident g_incidentQueue[MAX_INCIDENTS];
 extern uint8_t g_incidentQueueCount;
-extern JournalEntry g_journal[MAX_JOURNAL];
 extern uint8_t g_journalHead;
 extern uint8_t g_journalCount;
-extern AttentionEntry g_attention[MAX_ATTENTION];
 extern uint8_t g_attentionCount;
-extern CaptainProfile g_captains[MAX_CAPTAINS];
 extern RoutePreparation g_routePreparation;
 extern UiState g_ui;
+
+#if defined(SH_CROSSPOINT)
+// Inside CrossPoint the game's largest tables live in one block claimed when
+// the game opens and released when it closes, so the reader keeps that memory
+// while it runs. The names below read exactly like the static arrays elsewhere.
+struct GameTables {
+  PortState ports[MAX_PORTS];
+  Contract contracts[MAX_PORTS][MAX_CONTRACTS_PER_PORT];
+  Ship ships[MAX_SHIPS];
+  JournalEntry journal[MAX_JOURNAL];
+  AttentionEntry attention[MAX_ATTENTION];
+  CaptainProfile captains[MAX_CAPTAINS];
+  ReturnReport returnReport;          // input.cpp's waiting Company update
+  uint8_t artScratch[192 * 168 / 4];  // render_x4.cpp's art and miniature scratch
+};
+extern GameTables* g_tables;
+bool game_tables_claim();    // false: not enough memory in one piece
+void game_tables_release();
+#define g_ports (g_tables->ports)
+#define g_contracts (g_tables->contracts)
+#define g_ships (g_tables->ships)
+#define g_journal (g_tables->journal)
+#define g_attention (g_tables->attention)
+#define g_captains (g_tables->captains)
+#else
+extern JournalEntry g_journal[MAX_JOURNAL];
+extern AttentionEntry g_attention[MAX_ATTENTION];
+extern CaptainProfile g_captains[MAX_CAPTAINS];
+#endif
 
 uint32_t rng_next();
 uint32_t rng_range(uint32_t n);

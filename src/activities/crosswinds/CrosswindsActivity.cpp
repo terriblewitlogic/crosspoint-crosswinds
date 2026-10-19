@@ -40,9 +40,11 @@ void pushPress(const uint8_t button) {
 
 uint8_t* crosspoint_framebuffer() { return bridgeRenderer ? bridgeRenderer->getFrameBuffer() : nullptr; }
 
+// The game's clean refreshes use CrossPoint's half refresh (~1.7 s), as the
+// reader does; the full waveform takes ~3.8 s and CrossPoint never needs it.
 void crosspoint_display_push(const bool full) {
   if (!bridgeRenderer) return;
-  bridgeRenderer->displayBuffer(full ? HalDisplay::FULL_REFRESH : HalDisplay::FAST_REFRESH);
+  bridgeRenderer->displayBuffer(full ? HalDisplay::HALF_REFRESH : HalDisplay::FAST_REFRESH);
 }
 
 void board_x4_begin_early() {}
@@ -178,7 +180,7 @@ void CrosswindsActivity::onEnter() {
   }
   if (!started) {
     LOG_ERR("CW", "Crosswinds could not start");
-    onGoHome();
+    activityManager.goToFullScreenMessage("Not enough memory to open Crosswinds. Close other features and try again.");
   }
 }
 

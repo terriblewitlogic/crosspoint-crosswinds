@@ -82,7 +82,14 @@ static void import_flash_company() {
 
 bool crosswinds_start() {
   g_bootResumed = false;  // every launch decides afresh
-  if (!display_begin()) { Serial.println("Crosswinds: no framebuffer"); return false; }
+  // The game's tables are claimed here and released in crosswinds_stop, so the
+  // reader keeps that memory while it runs.
+  if (!game_tables_claim()) { Serial.println("Crosswinds: not enough memory"); return false; }
+  if (!display_begin()) {
+    Serial.println("Crosswinds: no framebuffer");
+    game_tables_release();
+    return false;
+  }
   if (save_begin()) import_flash_company();
   else Serial.println("Crosswinds: persistence unavailable");
 
@@ -126,10 +133,12 @@ void crosswinds_tick() {
 }
 
 void crosswinds_stop() {
-  if (!activeClockReady) return;
-  advance_live_clock(millis());
-  save_write();
-  activeClockReady = false;
+  if (activeClockReady) {
+    advance_live_clock(millis());
+    save_write();
+    activeClockReady = false;
+  }
+  game_tables_release();
 }
 
 #endif

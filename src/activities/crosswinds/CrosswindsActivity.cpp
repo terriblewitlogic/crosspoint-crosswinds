@@ -1,0 +1,141 @@
+#include "CrosswindsActivity.h"
+
+#include <HalGPIO.h>
+#include <HalPowerManager.h>
+#include <Logging.h>
+
+// Game entry points (lib/Crosswinds/src/crosspoint_main.cpp). The game's
+// headers are not included here: they rename `display`, which CrossPoint
+// also uses, so the two sides only share these plain functions.
+bool crosswinds_start();
+void crosswinds_tick();
+void crosswinds_stop();
+
+namespace {
+
+constexpr unsigned long EXIT_HOLD_MS = 1200;
+constexpr uint8_t GAME_BUTTONS = 6;  // BACK, CONFIRM, LEFT, RIGHT, UP, DOWN; POWER stays CrossPoint's
+
+GfxRenderer* bridgeRenderer = nullptr;
+bool exitRequested = false;
+
+// Presses since the game last looked, oldest first.
+uint8_t queue[8];
+uint8_t queueCount = 0;
+
+void pushPress(const uint8_t button) {
+  if (queueCount == sizeof(queue)) return;
+  queue[queueCount++] = button;
+}
+
+}  // namespace
+
+// ---------------------------------------------------------------------------
+// The game's display and board layer (declared in its lgfx_config.h and x4.h)
+// ---------------------------------------------------------------------------
+
+uint8_t* crosspoint_framebuffer() { return bridgeRenderer ? bridgeRenderer->getFrameBuffer() : nullptr; }
+
+void crosspoint_display_push(const bool full) {
+  if (!bridgeRenderer) return;
+  bridgeRenderer->displayBuffer(full ? HalDisplay::FULL_REFRESH : HalDisplay::FAST_REFRESH);
+}
+
+void board_x4_begin_early() {}
+void board_x4_begin() {}
+void board_x4_input_ready() {}
+bool board_x4_background_wake() { return false; }
+void board_x4_resume_standby(bool) {}
+void board_x4_tick() {}
+bool board_x4_sleep_soon() { return false; }
+bool board_x4_asleep() { return false; }
+bool board_x4_buffered_input() { return true; }
+
+uint8_t board_x4_read_buttons() {
+  uint8_t mask = 0;
+  for (uint8_t b = 0; b < GAME_BUTTONS; ++b) {
+    if (gpio.isPressed(b)) mask |= static_cast<uint8_t>(1u << b);
+  }
+  return mask;
+}
+
+int board_x4_take_button_event() {
+  if (queueCount == 0) return -1;
+  const int button = queue[0];
+  for (uint8_t i = 1; i < queueCount; ++i) queue[i - 1] = queue[i];
+  --queueCount;
+  return button;
+}
+
+bool board_x4_button_pending(const uint8_t button) {
+  for (uint8_t i = 0; i < queueCount; ++i) {
+    if (queue[i] == button) return true;
+  }
+  return false;
+}
+
+void board_x4_discard_button_events() { queueCount = 0; }
+
+int board_x4_battery_percent() { return powerManager.getBatteryPercentage(); }
+bool board_x4_usb_connected() { return gpio.isUsbConnected(); }
+
+// The game's POWER action and its low-battery shutdown both hand control
+// back to CrossPoint, which owns sleep and power.
+void board_x4_power_off() { exitRequested = true; }
+void board_x4_shutdown() { exitRequested = true; }
+
+// ---------------------------------------------------------------------------
+// Activity
+// ---------------------------------------------------------------------------
+
+void CrosswindsActivity::onEnter() {
+  Activity::onEnter();
+  bridgeRenderer = &renderer;
+  exitRequested = false;
+  queueCount = 0;
+  backDownSince = 0;
+  {
+    RenderLock lock(*this);
+    started = crosswinds_start();
+  }
+  if (!started) {
+    LOG_ERR("CW", "Crosswinds could not start");
+    onGoHome();
+  }
+}
+
+void CrosswindsActivity::onExit() {
+  // ActivityManager holds the render lock here.
+  if (started) crosswinds_stop();
+  started = false;
+  bridgeRenderer = nullptr;
+  queueCount = 0;
+  Activity::onExit();
+}
+
+void CrosswindsActivity::loop() {
+  if (!started) return;
+
+  for (uint8_t b = 0; b < GAME_BUTTONS; ++b) {
+    if (gpio.wasPressed(b)) pushPress(b);
+  }
+
+  if (gpio.isPressed(HalGPIO::BTN_BACK)) {
+    if (backDownSince == 0) {
+      backDownSince = millis();
+    } else if (millis() - backDownSince >= EXIT_HOLD_MS) {
+      exitRequested = true;
+    }
+  } else {
+    backDownSince = 0;
+  }
+
+  if (exitRequested) {
+    exitRequested = false;
+    onGoHome();
+    return;
+  }
+
+  RenderLock lock(*this);
+  crosswinds_tick();
+}

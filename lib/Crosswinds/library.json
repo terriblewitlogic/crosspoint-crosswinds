@@ -1,0 +1,13 @@
+{
+  "name": "Crosswinds",
+  "version": "0.1.0",
+  "description": "Crosswinds, a literary maritime trading game, built as a CrossPoint activity",
+  "frameworks": "arduino",
+  "platforms": "espressif32",
+  "dependencies": {
+    "lovyan03/LovyanGFX": "1.2.24"
+  },
+  "build": {
+    "flags": ["-DSH_X4", "-DSH_CROSSPOINT", "-Wno-error"]
+  }
+}

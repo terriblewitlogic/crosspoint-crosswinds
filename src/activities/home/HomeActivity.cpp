@@ -21,12 +21,13 @@
 #include "CrossPointState.h"
 #include "MappedInputManager.h"
 #include "OpdsServerStore.h"
+#include "activities/crosswinds/CrosswindsActivity.h"
 #include "RecentBooksStore.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
 
 int HomeActivity::getMenuItemCount() const {
-  int count = 4;  // File Browser, Library, File transfer, Settings
+  int count = 5;  // File Browser, Library, File transfer, Settings, Crosswinds
   if (!recentBooks.empty()) {
     count += recentBooks.size();
   }
@@ -322,6 +323,9 @@ void HomeActivity::loop() {
       case HomeMenuItem::SETTINGS_MENU:
         onSettingsOpen();
         break;
+      case HomeMenuItem::CROSSWINDS:
+        onCrosswindsOpen();
+        break;
       default:
         break;
     }
@@ -508,8 +512,8 @@ void HomeActivity::render(RenderLock&&) {
 
   // Build menu items dynamically
   std::vector<const char*> menuItems = {tr(STR_BROWSE_FILES), tr(STR_LIBRARY), tr(STR_FILE_TRANSFER),
-                                        tr(STR_SETTINGS_TITLE)};
-  std::vector<UIIcon> menuIcons = {Folder, Library, Transfer, Settings};
+                                        tr(STR_SETTINGS_TITLE), "Crosswinds"};
+  std::vector<UIIcon> menuIcons = {Folder, Library, Transfer, Settings, Bookmark};
 
   if (hasOpdsServers) {
     menuItems.insert(menuItems.begin() + 2, tr(STR_OPDS_BROWSER));
@@ -559,3 +563,7 @@ void HomeActivity::onSettingsOpen() { activityManager.goToSettings(); }
 void HomeActivity::onFileTransferOpen() { activityManager.goToFileTransfer(); }
 
 void HomeActivity::onOpdsBrowserOpen() { activityManager.goToBrowser(); }
+
+void HomeActivity::onCrosswindsOpen() {
+  activityManager.replaceActivity(std::make_unique<CrosswindsActivity>(renderer, mappedInput));
+}

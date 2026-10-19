@@ -130,6 +130,13 @@ void crosswinds_tick() {
   if (g_ui.dirty) render_frame();
 }
 
+// Back from a dialog drawn over the game: repaint, and do not count the time it
+// was open as play time.
+void crosswinds_resume() {
+  lastInput = lastSimulation = lastAutosave = millis();
+  render_request_full_refresh();
+}
+
 void crosswinds_stop() {
   if (activeClockReady) {
     advance_live_clock(millis());

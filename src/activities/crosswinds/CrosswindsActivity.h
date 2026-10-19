@@ -7,12 +7,16 @@
 
 // Runs the Crosswinds game (lib/Crosswinds) as a full-screen activity.
 // The game draws into the renderer's framebuffer itself and pushes its own
-// frames, so render() is unused. Holding BACK returns to Home; the company
-// is saved on every exit, including when CrossPoint goes to sleep.
+// frames, so render() is unused. Holding BACK asks whether to quit and, if
+// confirmed, returns to Home; the company is saved on every exit, including
+// when CrossPoint goes to sleep.
 class CrosswindsActivity final : public Activity {
   bool started = false;
+  bool asking = false;
   bool leaving = false;
   HoldTimer backHold;
+
+  void onQuitAnswer(const ActivityResult& result);
 
  public:
   explicit CrosswindsActivity(GfxRenderer& renderer, MappedInputManager& mappedInput)

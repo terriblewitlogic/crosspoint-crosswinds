@@ -23,7 +23,7 @@ The game is played in landscape with the reader turned so the four front buttons
 down the right edge of the screen. From the top they act as UP, DOWN, OK and BACK.
 The side rocker flips between ports and pages.
 
-- **Quit:** hold BACK for a second or two, or choose QUIT in the Company Menu. Both save first.
+- **Quit:** hold BACK for a second or two and confirm, or choose QUIT in the Company Menu, which does not ask. Both save first.
 - **Time:** ships only move while the game is open. Nothing happens while it is closed.
 - **Saves:** files in `/.crosspoint/crosswinds` on the SD card. Copy that folder to back up a company.
 - **Input:** buttons only. There is no touch support, sound, or language other than English.

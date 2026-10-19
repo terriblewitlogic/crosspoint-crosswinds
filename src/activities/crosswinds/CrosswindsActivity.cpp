@@ -10,10 +10,13 @@
 #include <cstdio>
 #include <new>
 
+#include "activities/util/ConfirmationActivity.h"
+
 // Game entry points (lib/Crosswinds/src/crosspoint_main.cpp). The game's headers
 // stay out of this file because they rename `display`, which CrossPoint also uses.
 bool crosswinds_start();
 void crosswinds_tick();
+void crosswinds_resume();
 void crosswinds_stop();
 
 namespace {
@@ -172,6 +175,7 @@ void CrosswindsActivity::onEnter() {
   Activity::onEnter();
   bridgeRenderer = &renderer;
   exitRequested = false;
+  asking = false;
   leaving = false;
   queueCount = 0;
   backHold.reset();
@@ -194,8 +198,29 @@ void CrosswindsActivity::onExit() {
   Activity::onExit();
 }
 
+void CrosswindsActivity::onQuitAnswer(const ActivityResult& result) {
+  if (result.isCancelled) {
+    queueCount = 0;
+    crosswinds_resume();
+  } else {
+    leaving = true;
+  }
+}
+
 void CrosswindsActivity::loop() {
   if (!started) return;
+
+  if (asking) {
+    // The dialog treats a Back release as Cancel, so wait until every button is up.
+    for (uint8_t b = 0; b < GAME_BUTTONS; ++b) {
+      if (gpio.isPressed(b) || gpio.wasReleased(b)) return;
+    }
+    asking = false;
+    startActivityForResult(std::make_unique<ConfirmationActivity>(renderer, mappedInput, "Quit Crosswinds?",
+                                                                  "Your company is saved on the way out."),
+                           [this](const ActivityResult& result) { onQuitAnswer(result); });
+    return;
+  }
 
   if (leaving) {
     // Home acts on button releases. Wait until every button is up so the press
@@ -212,7 +237,9 @@ void CrosswindsActivity::loop() {
   }
 
   if (backHold.update(gpio.isPressed(HalGPIO::BTN_BACK), millis(), EXIT_HOLD_MS, HOLD_STEP_CAP_MS)) {
-    exitRequested = true;
+    backHold.reset();
+    asking = true;
+    return;
   }
 
   if (exitRequested) {

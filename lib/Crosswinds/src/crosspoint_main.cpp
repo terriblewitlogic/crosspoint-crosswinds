@@ -1,7 +1,8 @@
 // Crosswinds as an activity inside the CrossPoint reader firmware. This replaces
 // ships.ino and board_x4.cpp: CrossPoint owns boot, power, sleep and the button
 // sampler, and calls these three functions from its activity. Every start loads
-// the save, so leaving and coming back resumes the company.
+// the save, so leaving and coming back resumes the company, with ships at sea
+// moved on by the time the game was closed.
 #if defined(SH_CROSSPOINT)
 #include <LittleFS.h>
 #include <esp_random.h>
@@ -9,6 +10,7 @@
 #include "display.h"
 #include "save_fs.h"
 #include "x4.h"
+#include "x4_standby.h"
 
 bool g_bootResumed = false;
 
@@ -34,6 +36,57 @@ static void advance_live_clock(uint32_t now) {
 }
 
 void board_x4_sync_active_clock() { advance_live_clock(millis()); }
+
+// Time spent outside the game while the reader stays on. CrossPoint's sleep
+// cuts the battery and the X4 has no clock chip, so a sleep ends the count.
+static bool closedValid = false;
+static uint32_t closedAtMs = 0, closedSeed = 0, closedWorld = 0;
+
+static bool ships_sailing() {
+  if (g_campaign.paused) return false;
+  for (int i = 0; i < g_campaign.shipCount; ++i)
+    if (g_ships[i].state == SHIP_SAILING) return true;
+  return false;
+}
+
+static uint32_t seconds_to_next_arrival(uint32_t rate) {
+  uint32_t seconds = X4_STANDBY_MAX_WAKE_SECONDS;
+  for (int i = 0; i < g_campaign.shipCount; ++i) {
+    const Ship& ship = g_ships[i];
+    if (ship.state != SHIP_SAILING) continue;
+    uint32_t remaining = ship.legTotalMinutes > ship.legElapsedMinutes ?
+                         ship.legTotalMinutes - ship.legElapsedMinutes : 1;
+    seconds = min(seconds, x4_standby_wake_seconds(remaining, rate));
+  }
+  return seconds;
+}
+
+// As the standalone voyage standby did: ships already under way finish their
+// legs, nothing new sails, and the clock stops once no ship is at sea.
+static void catch_up_closed_time() {
+  if (!closedValid) return;
+  closedValid = false;
+  // Only the snapshot written on close, never an older one or another company.
+  if (g_campaign.seed != closedSeed || g_campaign.worldMinutes != closedWorld) return;
+  uint32_t pending = (millis() - closedAtMs) / 1000;
+  const uint32_t rate = SIM_WORLD_MINUTES_PER_REAL_SECOND *
+                        (g_campaign.timeScale ? g_campaign.timeScale : 1u);
+  bool advanced = false;
+  save_suspend(true);
+  while (pending && ships_sailing()) {
+    uint32_t seconds = min(pending, seconds_to_next_arrival(rate));
+    if ((uint64_t)seconds * rate > UINT32_MAX - g_campaign.worldMinutes) break;
+    sim_advance_minutes(seconds * rate);
+    pending -= seconds;
+    advanced = true;
+  }
+  save_suspend(false);
+  if (advanced && !save_write()) Serial.println("Crosswinds: save after catch-up failed");
+}
+
+#if defined(SH_HOST_TESTS)
+void crosswinds_test_closed_for(uint32_t seconds) { closedAtMs -= seconds * 1000u; }
+#endif
 
 // The standalone firmware and early builds of this port kept the company in
 // LittleFS on the flash data partition. It moves to the SD card once, and the
@@ -94,6 +147,7 @@ bool crosswinds_start() {
   if (save_exists() && save_read()) {
     g_bootResumed = true;
     Serial.println("Crosswinds: resumed company.");
+    catch_up_closed_time();
   } else {
     bool unreadable = save_exists();
     if (unreadable) save_quarantine();
@@ -140,7 +194,10 @@ void crosswinds_resume() {
 void crosswinds_stop() {
   if (activeClockReady) {
     advance_live_clock(millis());
-    save_write();
+    closedValid = save_write();
+    closedAtMs = millis();
+    closedSeed = g_campaign.seed;
+    closedWorld = g_campaign.worldMinutes;
     activeClockReady = false;
   }
   game_tables_release();

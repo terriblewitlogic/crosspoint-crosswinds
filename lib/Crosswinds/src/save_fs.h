@@ -1,8 +1,7 @@
-// Where the save files live. The standalone firmware and the desktop host keep
-// them in LittleFS. Inside CrossPoint they go to the SD card through
-// CrossPoint's storage layer (crosspoint_fs_* in the fork's
-// CrosswindsActivity.cpp), which serialises card access with the reader; the
-// names save.cpp uses ("/sh_company.sav" and so on) land in one folder there.
+// Where the save files live: LittleFS in the standalone and host builds, the SD
+// card in CrossPoint (crosspoint_fs_* in the fork's CrosswindsActivity.cpp, which
+// serializes card access with the reader). Names such as "/sh_company.sav" land
+// in one folder there.
 #pragma once
 #include "profile.h"
 

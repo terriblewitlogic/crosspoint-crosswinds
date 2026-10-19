@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef CROSSWINDS_ENABLED
+
 #include "activities/Activity.h"
 
 // Runs the Crosswinds game (lib/Crosswinds) as a full-screen activity.
@@ -18,3 +20,5 @@ class CrosswindsActivity final : public Activity {
   void onExit() override;
   void loop() override;
 };
+
+#endif  // CROSSWINDS_ENABLED

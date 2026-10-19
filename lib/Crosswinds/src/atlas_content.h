@@ -1,5 +1,5 @@
 // The Sea Atlas: one page per port, charted on first arrival.
-// Text comes from docs/SEA_ATLAS.md; landmarks are the port's map engraving.
+// Each entry holds the port's landmark name and the text of its page.
 #pragma once
 #include <stdint.h>
 

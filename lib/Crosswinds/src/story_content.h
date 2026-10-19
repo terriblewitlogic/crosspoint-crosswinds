@@ -1,6 +1,5 @@
 // The Grey Passenger: seven keepsakes carried home for lost sailors.
-// Story and rules: docs/GREY_PASSENGER.md. Text lives in flash; the journal
-// only records a short line per delivery.
+// The text lives in flash; the journal only records a short line per delivery.
 #pragma once
 #include <stdint.h>
 

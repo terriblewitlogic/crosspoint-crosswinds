@@ -568,7 +568,7 @@ struct Campaign {
   uint32_t standbySessionId;
   uint32_t standbyAccountedRealSeconds;
   uint32_t returnMilestones, returnMilestonesSeen;
-  // The Grey Passenger (v14; docs/GREY_PASSENGER.md). Chapters are 0-6;
+  // The Grey Passenger (save format 14). Chapters are 0-6;
   // STORY_NONE (0xFF) marks an empty chapter field.
   uint8_t storyDelivered;       // bit per delivered chapter
   uint8_t storyDeliveries;      // count; drives pay and the courier's thread line

@@ -20,11 +20,10 @@ inline int hit_test(const HitRegion* rows, int count, int x, int y) {
 }
 
 #if defined(SH_X4)
-// Landscape 800x480 inside a safe area: the X4 bezel overlaps about 9px of
-// the left edge and 3px of the others (CrossPoint's measured inset), so
-// nothing is drawn in the outer margins. Main navigation is above the
-// content; the world chart has a compact context panel to its right and
-// actions below. The four physical button legend appears on the title only.
+// Landscape 800x480 inside a safe area: the bezel hides about 9px on the left
+// and 3px on the other edges (CrossPoint's measured inset). Navigation is above
+// the content; the world chart has a context panel to its right and actions
+// below. The button legend shows on the title only.
 static constexpr int X4_INSET_LEFT = 16;
 static constexpr int X4_INSET_RIGHT = 8;
 static constexpr int X4_INSET_TOP = 6;

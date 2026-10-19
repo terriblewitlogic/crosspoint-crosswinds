@@ -1,9 +1,7 @@
-// Crosswinds as an activity inside the CrossPoint reader firmware.
-//
-// This replaces ships.ino and board_x4.cpp for the SH_CROSSPOINT profile:
-// CrossPoint owns boot, power, sleep and the button sampler, and calls these
-// three functions from its activity. The game state is loaded from the save
-// on every start, so leaving the game and coming back resumes the company.
+// Crosswinds as an activity inside the CrossPoint reader firmware. This replaces
+// ships.ino and board_x4.cpp: CrossPoint owns boot, power, sleep and the button
+// sampler, and calls these three functions from its activity. Every start loads
+// the save, so leaving and coming back resumes the company.
 #if defined(SH_CROSSPOINT)
 #include <LittleFS.h>
 #include <esp_random.h>
@@ -37,9 +35,9 @@ static void advance_live_clock(uint32_t now) {
 
 void board_x4_sync_active_clock() { advance_live_clock(millis()); }
 
-// The first CrossPoint builds kept saves in LittleFS on CrossPoint's unused
-// flash data partition. A company found there moves to the SD card once; the
-// flash copies are then renamed so a later campaign reset cannot revive them.
+// The standalone firmware and early builds of this port kept the company in
+// LittleFS on the flash data partition. It moves to the SD card once, and the
+// flash copies are renamed so a campaign reset cannot bring them back.
 static const char* const FLASH_SAVES[] = {
   "/sh_company.sav", "/sh_company.bak",
   "/sh_fleet.sav", "/sh_ports.sav", "/sh_jobs.sav", "/sh_log.sav", "/sh_core.sav",

@@ -1,9 +1,6 @@
-// Build profile selection.
-//
-// The Makefiles pass the profile define on the command line (for example
-// `-DSH_X4` for the Xteink X4 target). When building from the Arduino IDE,
-// uncomment exactly one of the lines below instead. Leaving all of them
-// commented selects the classic 480x320 ESP32-3248S035C touch panel.
+// Build profile. The Makefiles pass the profile define (for example -DSH_X4);
+// in the Arduino IDE, uncomment one line below. None selects the classic
+// 480x320 ESP32-3248S035C touch panel.
 #pragma once
 
 // #define SH_X4      // Xteink X4: ESP32-C3, 4.26" 800x480 e-paper, buttons

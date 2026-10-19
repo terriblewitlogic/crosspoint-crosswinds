@@ -1070,24 +1070,13 @@ static void handle_map_touch_release() {
 }
 
 #if defined(SH_X4)
-// ---------------------------------------------------------------------------
-// Xteink X4 button navigation. The touch handlers above remain the single
-// source of game-side behaviour; this layer keeps a focus cursor over the
-// same hit geometry and feeds those handlers synthetic taps.
-//
-// Physical buttons become actions through X4_ACTION_OF_BUTTON (x4.h):
-//   UP / DOWN   move the cursor through everything on the screen: the button
-//               column on the map and harbour, rows then footer buttons in a
-//               card, the options of an incident
-//   OK          activate the focused control
-//   BACK        close a card; at the top level, open the ship's bell menu
-//   PAGE PREV / PAGE NEXT (the rocker) are shortcuts: the selected port on
-//               the map, the selected ship in the harbour, the page or tab of
-//               a card, or the price on the route rules row
-//   POWER       save and power off
-// Presses never auto-repeat. The device sampler captures physical edges while
-// e-paper rendering blocks this loop, then actions run one per visible frame.
-// ---------------------------------------------------------------------------
+// Xteink X4 button navigation. The touch handlers above hold the game's
+// behaviour; this layer keeps a focus cursor over the same hit geometry and
+// feeds them synthetic taps. X4_ACTION_OF_BUTTON (x4.h) maps buttons to actions:
+// UP/DOWN move the cursor, OK activates, BACK closes a card (at the top level it
+// opens the ship's bell menu), the rocker flips ports and pages, POWER saves and
+// powers off. Presses never auto-repeat: the sampler captures edges while
+// e-paper rendering blocks this loop, and actions run one per visible frame.
 #include "x4.h"
 #if defined(LGFX_SDL)
 void board_x4_host_wake();
@@ -1587,7 +1576,7 @@ static void x4_goal_moment_close() {
   render_request_full_refresh();  // clear the heavy art before the task screen returns
 }
 
-// The Grey Passenger (docs/GREY_PASSENGER.md): a whole-screen page when a
+// The Grey Passenger: a whole-screen page when a
 // keepsake is taken aboard, when it is delivered, and when it is reread from
 // Keepsakes. A delivery waits for the same calm screen as a goal moment.
 static uint8_t storyMomentMode = 0, storyMomentChapter = STORY_NONE;
@@ -1617,11 +1606,9 @@ static void x4_story_moment_close() {
   render_request_full_refresh();
 }
 
-// ---------------------------------------------------------------------------
 // Onboarding (sim_onboarding.h): the captain and name screens are full-screen
-// steps; the voyage itself runs on the ordinary screens with focus steered to
-// the next control and a captain's line along the bottom.
-// ---------------------------------------------------------------------------
+// steps; the voyage runs on the ordinary screens with focus steered to the next
+// control and a captain's line along the bottom.
 static uint8_t onboardPick = 0, onboardName = 0;
 static uint32_t goalMomentValue = 0;
 uint8_t x4_onboarding_pick() { return onboardPick; }
@@ -2670,10 +2657,9 @@ static void x4_press(uint8_t button) {
 }
 
 static void x4_sync_input_context() {
-  // A queue belongs to the screen the player saw. Drop ordinary presses
-  // accumulated while a different card/title/scene was opening, including
-  // automatic arrivals and incidents. Keeping the held state prevents a
-  // long OK press from activating the newly opened screen.
+  // Drop presses queued while another card, title or scene was opening
+  // (including automatic arrivals and incidents). Keeping the held state stops
+  // a long OK from activating the new screen.
   static uint64_t seenContext = UINT64_MAX;
   static bool seenReturn = false;
   static uint32_t seenReport = 0;

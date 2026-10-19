@@ -1,4 +1,4 @@
-// Included at the end of sim.cpp. The X4 first voyage (docs/ONBOARDING_PLAN.md):
+// Included at the end of sim.cpp. The X4 first voyage:
 // choose and name a captain, buy Textiles at Lantern Quay, sail to Gullhaven,
 // sell them. Only the captain screens are explicit steps; the voyage steps are
 // read from the starting ship's hold and position each update.

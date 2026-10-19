@@ -257,10 +257,8 @@ bool sim_tutorial_guided() {
          g_campaign.tutorialStep < TUTORIAL_MARKET;
 }
 
-// ---------------------------------------------------------------------------
-// Staged unlocks. The stage is derived from what the company has done and
-// only ever rises (stageSeen keeps the high-water mark across saves).
-// ---------------------------------------------------------------------------
+// Staged unlocks: the stage is derived from what the company has done and only
+// rises (stageSeen keeps the high-water mark across saves).
 
 static const char* const STAGE_NAMES[STAGE_COUNT] = {
   "First voyage", "Trading", "Company", "Operations", "Expansion", "Mastery"
@@ -1182,10 +1180,9 @@ struct MarketUnit {
   uint8_t delivered;
 };
 
-// Market cargo never has a contract. Its otherwise-unused contractId stores
-// the fractional remainder of the stack's purchase cost, keeping save v7's
-// layout and existing integer unit-price display. Legacy market items have a
-// zero remainder. Repeated purchases must not round away the existing basis.
+// Market cargo has no contract, so its contractId holds the fractional remainder
+// of the stack's purchase cost (keeps save v7's layout; legacy items hold zero),
+// so repeated purchases do not round away the basis.
 static uint32_t market_cost_basis(const CargoItem& cargo) {
   return (uint32_t)cargo.paidUnitPrice * cargo.quantity + cargo.contractId;
 }

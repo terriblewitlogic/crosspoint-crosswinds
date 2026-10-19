@@ -7,20 +7,16 @@
 
 #if defined(SH_X4)
 
-// Physical buttons as the resistor ladder reports them. Held upright the four
-// front buttons sit under the screen in this order (left to right): BACK,
-// CONFIRM, LEFT, RIGHT; UP and DOWN are the rocker on the case edge; POWER is
-// on the top edge.
+// Buttons as the resistor ladder reports them. Held upright, the front buttons
+// run BACK, CONFIRM, LEFT, RIGHT; UP and DOWN are the side rocker; POWER is on top.
 enum X4Button : uint8_t {
   X4_BTN_BACK, X4_BTN_CONFIRM, X4_BTN_LEFT, X4_BTN_RIGHT,
   X4_BTN_UP, X4_BTN_DOWN, X4_BTN_POWER, X4_BTN_COUNT
 };
 
-// What the game does with a button. The game is played in landscape with the
-// reader turned so the front buttons run down the right edge of the screen,
-// top to bottom: RIGHT, LEFT, CONFIRM, BACK. That column becomes UP / DOWN /
-// OK / BACK, which is all the game needs. The rocker, now along the top edge,
-// is a shortcut for flipping ports and pages.
+// Game actions. The game is played in landscape with the front buttons in a
+// column down the right edge (RIGHT, LEFT, CONFIRM, BACK from the top), which
+// become UP / DOWN / OK / BACK. The rocker flips ports and pages.
 enum X4Action : uint8_t {
   X4_ACT_UP, X4_ACT_DOWN, X4_ACT_OK, X4_ACT_BACK,
   X4_ACT_PAGE_PREV, X4_ACT_PAGE_NEXT, X4_ACT_POWER, X4_ACT_COUNT
@@ -120,7 +116,7 @@ bool x4_goal_moment_active();
 uint8_t x4_goal_moment_step();    // the GOAL_STEP_* rung just completed
 uint8_t x4_goal_moment_region();  // the region a completed dock opened
 int32_t x4_goal_moment_value();   // the first-profit moment's coins
-// The Grey Passenger's whole-screen pages (docs/GREY_PASSENGER.md).
+// The Grey Passenger's whole-screen pages.
 enum X4StoryMoment : uint8_t { X4_STORY_REVEAL = 1, X4_STORY_DELIVERED, X4_STORY_REREAD,
                                X4_ATLAS_PAGE };  // Sea Atlas page: chapter is the port
 bool x4_story_moment_active();

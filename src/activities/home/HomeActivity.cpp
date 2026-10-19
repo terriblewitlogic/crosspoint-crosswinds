@@ -21,13 +21,28 @@
 #include "CrossPointState.h"
 #include "MappedInputManager.h"
 #include "OpdsServerStore.h"
+#ifdef CROSSWINDS_ENABLED
 #include "activities/crosswinds/CrosswindsActivity.h"
+#endif
 #include "RecentBooksStore.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
 
+// Crosswinds is drawn for the X4's 800x480 panel and buttons, so the X3 build of
+// the shared image does not offer it.
+static bool crosswindsAvailable() {
+#ifdef CROSSWINDS_ENABLED
+  return gpio.deviceIsX4();
+#else
+  return false;
+#endif
+}
+
 int HomeActivity::getMenuItemCount() const {
-  int count = 5;  // File Browser, Library, File transfer, Settings, Crosswinds
+  int count = 4;  // File Browser, Library, File transfer, Settings
+  if (crosswindsAvailable()) {
+    count++;
+  }
   if (!recentBooks.empty()) {
     count += recentBooks.size();
   }
@@ -512,8 +527,12 @@ void HomeActivity::render(RenderLock&&) {
 
   // Build menu items dynamically
   std::vector<const char*> menuItems = {tr(STR_BROWSE_FILES), tr(STR_LIBRARY), tr(STR_FILE_TRANSFER),
-                                        tr(STR_SETTINGS_TITLE), "Crosswinds"};
-  std::vector<UIIcon> menuIcons = {Folder, Library, Transfer, Settings, Bookmark};
+                                        tr(STR_SETTINGS_TITLE)};
+  std::vector<UIIcon> menuIcons = {Folder, Library, Transfer, Settings};
+  if (crosswindsAvailable()) {
+    menuItems.push_back("Crosswinds");
+    menuIcons.push_back(Bookmark);
+  }
 
   if (hasOpdsServers) {
     menuItems.insert(menuItems.begin() + 2, tr(STR_OPDS_BROWSER));
@@ -565,5 +584,7 @@ void HomeActivity::onFileTransferOpen() { activityManager.goToFileTransfer(); }
 void HomeActivity::onOpdsBrowserOpen() { activityManager.goToBrowser(); }
 
 void HomeActivity::onCrosswindsOpen() {
+#ifdef CROSSWINDS_ENABLED
   activityManager.replaceActivity(std::make_unique<CrosswindsActivity>(renderer, mappedInput));
+#endif
 }

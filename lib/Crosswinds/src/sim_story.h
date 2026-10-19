@@ -1,5 +1,5 @@
 // The Grey Passenger: a recurring courier offers one sealed parcel at a time.
-// Included by sim.cpp after sim_merchant.h. Rules: docs/GREY_PASSENGER.md.
+// Included by sim.cpp after sim_merchant.h; the chapter text is in story_content.h.
 #pragma once
 #include "story_content.h"
 

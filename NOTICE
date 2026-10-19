@@ -1,0 +1,32 @@
+Third-party material in this repository and in the firmware built from it.
+The MIT License in LICENSE covers the Crosswinds code. The notes below cover
+what it does not.
+
+CrossPoint Reader
+  Everything outside lib/Crosswinds and src/activities/crosswinds is CrossPoint
+  Reader 1.6.5, MIT licensed, Copyright (c) 2025 CrossPoint Reader organization.
+  https://github.com/crosspoint-reader/crosspoint-reader
+  CrossPoint's own third-party notices (including freeink-sdk/NOTICE) apply.
+
+LovyanGFX
+  The game draws through LovyanGFX 1.2.24, fetched by PlatformIO at build time and
+  linked into the firmware. Its library manifest declares MIT and BSD-2-Clause;
+  see https://github.com/lovyan03/LovyanGFX for the license texts.
+  Four of its bundled fonts are used (FreeSans 12pt, FreeSansBold 18pt and 24pt,
+  FreeSerifBold 24pt). These are GNU FreeFont faces in the Adafruit GFX format,
+  distributed under the GNU GPL with the FreeFont font-embedding exception.
+
+Spleen 5x8 (lib/Crosswinds/src/ui_fonts.h)
+  Copyright (c) 2018-2022, Frederic Cambus, BSD 2-Clause License. Extracted from
+  u8g2's font files. https://github.com/fcambus/spleen
+
+Artwork (lib/Crosswinds/src/img_*.h, x4_routes.h)
+  The illustrations were generated with OpenAI's image generation tool, then
+  reduced to 1-bit and packed by scripts that are not part of this repository.
+  The maintainer makes no copyright claim over the generated images beyond what
+  the law gives them.
+
+Code and text
+  Most of the Crosswinds code and in-game writing was produced with Claude Code
+  (Anthropic) at the maintainer's direction. The commit history records it in
+  Co-Authored-By trailers.

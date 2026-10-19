@@ -116,10 +116,9 @@ static void x4_merchant_quantity(int dir) {
   else if (!(merchantDraft.selling && candidate.code == SIM_CARGO_UNAVAILABLE)) apply_result(candidate.code);
   x4_merchant_refresh(); g_ui.dirty = 1;
 }
-// A newly chosen good starts at the most the ship can trade: the whole hold's
-// worth when buying, everything aboard when selling. LEFT trims it down.
-// Feasibility is monotonic (a unit fails only once coins, room or stock run
-// out), so the largest feasible amount is found by bisection.
+// A newly chosen good starts at the most the ship can trade (the whole hold when
+// buying, everything aboard when selling); LEFT trims it. Feasibility is
+// monotonic, so the largest amount is found by bisection.
 static void x4_merchant_quantity_max() {
   if (g_ui.card != CARD_TRADE || g_ui.selectedGood >= GOOD_COUNT) return;
   uint8_t good = g_ui.selectedGood;

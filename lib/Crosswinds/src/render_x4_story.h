@@ -454,7 +454,7 @@ static void draw_story_charters() {
 }
 
 // ---------------------------------------------------------------------------
-// The Grey Passenger (docs/GREY_PASSENGER.md).
+// The Grey Passenger.
 // ---------------------------------------------------------------------------
 
 static int story_delivery_position(uint8_t chapter) {
@@ -531,10 +531,8 @@ static void draw_keepsakes_card() {
   draw_button(CARD_FOOTER[2], "CLOSE");
 }
 
-// ---------------------------------------------------------------------------
-// The Sea Atlas (docs/SEA_ATLAS.md): one list page per region, then a
-// whole-screen page per charted port drawn by draw_story_moment.
-// ---------------------------------------------------------------------------
+// The Sea Atlas: one list page per region, then a whole-screen page per
+// charted port drawn by draw_story_moment.
 
 static void atlas_goods(char* out, size_t cap, const char* label, const uint8_t* goods) {
   if (goods[0] == goods[1] || goods[1] >= GOOD_COUNT) snprintf(out, cap, "%s %s", label, GOOD_DEFS[goods[0]].name);

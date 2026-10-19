@@ -9,13 +9,12 @@
 #include <LovyanGFX.hpp>
 
 #if defined(SH_CROSSPOINT)
-// Inside the CrossPoint reader firmware (checked first so a host test can
-// build this profile with LovyanGFX's SDL platform underneath). The game
-// draws straight into CrossPoint's 800x480 1-bit framebuffer (panel-native,
-// MSB first, white = 1) through a LovyanGFX sprite, and the CrossPoint side
-// pushes it to the panel.
-// CrossPoint already owns a global named `display`, so the game's is renamed;
-// LovyanGFX's own display() member is declared above and keeps its name.
+// Inside the CrossPoint reader firmware. The game draws into CrossPoint's
+// 800x480 1-bit framebuffer (MSB first, white = 1) through a LovyanGFX sprite,
+// and the CrossPoint side pushes it to the panel. This branch is checked first
+// so host tests can build the profile on LovyanGFX's SDL platform.
+// CrossPoint has its own global `display`, so the macro below renames the game's,
+// including the display() method (hence cw_display() here).
 uint8_t* crosspoint_framebuffer();
 void crosspoint_display_push(bool full);
 
@@ -26,9 +25,8 @@ class LGFX : public lgfx::LGFX_Sprite {
     uint8_t* fb = crosspoint_framebuffer();
     if (!fb) return false;
     // setBuffer(..., bpp) only retypes the color converter; the sprite panel
-    // keeps its 16-bit default and would write far past the 48000-byte buffer.
-    // Set the depth while no buffer is attached (so nothing is allocated),
-    // then attach CrossPoint's. 1-bit colors are bit 0: white -> 1.
+    // stays 16 bpp and would write past the 48000-byte buffer. Set the depth
+    // with no buffer attached, then attach CrossPoint's.
     deleteSprite();
     setColorDepth(lgfx::color_depth_t::grayscale_1bit);
     setBuffer(fb, 800, 480);
@@ -44,11 +42,9 @@ class LGFX : public lgfx::LGFX_Sprite {
   void waitDisplay() {}
   bool getTouch(int32_t*, int32_t*) { return false; }  // buttons only
 
-  // LovyanGFX copies palette *indexes* into any sprite under 8 bits per pixel
-  // (pixelcopy_t falls back to copy_bit_affine), which ignores the palette and
-  // swaps ink and paper in the game's art. These replace the two pushImage
-  // forms the renderer uses: look each index up and keep its brightness, as
-  // the e-paper panel's own conversion does. Rows are byte-aligned, as there.
+  // LovyanGFX copies palette indexes into sprites under 8 bpp, ignoring the
+  // palette and swapping ink and paper in the art. These two pushImage forms
+  // look each index up and keep its brightness. Rows are byte-aligned.
   void pushImage(int32_t x, int32_t y, int32_t w, int32_t h, const void* data,
                  lgfx::color_depth_t depth, const lgfx::rgb565_t* palette) {
     blit(x, y, w, h, static_cast<const uint8_t*>(data), UINT32_MAX, depth, palette);
@@ -139,12 +135,9 @@ static inline void board_backlight_set(uint8_t pct) {
 #include "x4_pins.h"
 #include <lgfx/v1/panel/Panel_SSD1677.hpp>  // not part of the umbrella header
 
-// Xteink X4: GDEQ0426T82 4.26" 800x480 e-paper on an SSD1677 controller, SPI2
-// of the ESP32-C3. The panel is landscape-native: rotation 0 puts the four
-// front buttons along the right edge of the picture (reader turned
-// anticlockwise from upright). Rotation 2 flips the picture for holding the
-// reader the other way, with the buttons on the left; rotation 3 is the
-// upright portrait orientation CrossPoint uses.
+// Xteink X4: GDEQ0426T82 800x480 e-paper on an SSD1677, SPI2. Rotation 0 is
+// landscape with the front buttons along the right edge; 2 flips it; 3 is the
+// upright portrait CrossPoint uses.
 class LGFX : public lgfx::LGFX_Device {
   lgfx::Panel_SSD1677 panel;
   lgfx::Bus_SPI bus;

@@ -6,7 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to report this bug! Please fill out the details below.
+        Thanks for reporting this. This repository is Crosswinds, a fork of CrossPoint 1.6.5.
+        If the problem also happens on an official CrossPoint release, please report it upstream.
 
   - type: dropdown
     id: device

@@ -1,24 +1,9 @@
-// Event-driven black-and-white renderer for the Xteink X4 (ESP32-C3, 4.26"
-// 800x480 SSD1677 e-paper held in landscape).
-//
-// Drawing goes straight into the panel driver's buffer; there is no separate
-// framebuffer because the C3 has no PSRAM. render_frame() redraws the screen
-// only when a fingerprint of the visible state changes, pushes a partial
-// (fast) refresh for that change, and clears ghosting with a full (quality)
-// refresh once PARTIALS_BEFORE_FULL pushes have accumulated. That full refresh
-// waits for the next change of screen (scene, card, title, Watch) so the
-// panel never flashes under a still screen or a moving ship; only after
-// PARTIALS_HARD_LIMIT pushes on one screen is it forced. Simulation-driven
-// changes (ships moving, the clock) are rate limited; button presses and
-// structural changes (cards, scenes, notices, incidents) refresh at once.
-// A visible voyage map advances in measured steps; the camera moves only when
-// its followed ship approaches the edge of the current view.
-//
-// Layout: everything sits inside a safe area clear of the bezel. The map or
-// harbour with the ship/port panel under it fills the left, a column of
-// buttons listed by input.cpp stands to its right. The title screen shows the
-// painting with a legend strip along the right edge naming the four physical
-// front buttons beside it; the strip goes away once play starts.
+// Event-driven black-and-white renderer for the Xteink X4 (800x480 SSD1677
+// e-paper, landscape). It draws straight into the panel buffer; the C3 has no PSRAM.
+// render_frame() redraws only when the visible state changes and pushes a fast
+// refresh for it. A full refresh clears ghosting after PARTIALS_BEFORE_FULL
+// pushes, waiting for the next screen change (forced at PARTIALS_HARD_LIMIT).
+// Simulation-driven changes are rate limited; button presses refresh at once.
 #if defined(SH_X4)
 
 #include "game.h"
@@ -916,10 +901,9 @@ static void eta_short(const Ship& s, char* out, size_t cap) {
   x4_format_duration(out, cap, x4_real_seconds(left, g_campaign.timeScale));
 }
 
-// One bounded layout owns port and ship labels, so both kinds participate in
-// collision avoidance. Selected port and ship reserve their space first.
-// Ship labels are always black, port labels always white; the selected port
-// carries a compass star in front of its name.
+// One layout owns port and ship labels so they avoid each other; the selected
+// port and ship reserve space first. Ship labels are black, port labels white,
+// and the selected port gets a compass star.
 struct MapLabelPlacement {
   int16_t x, y, width, anchorX, anchorY;
   uint8_t index, ship;
@@ -1897,7 +1881,7 @@ static void draw_help_card() {
       "Parcels are free; one space each.",
       "Hazards use the shown safe fallback.",
 #if defined(SH_CROSSPOINT)
-      "Hold BACK to quit; voyages wait for you."
+      "Hold BACK to quit; the clock stops."
 #elif SH_X4_VOYAGE_STANDBY
       "POWER: voyages continue in standby."
 #else
@@ -1919,7 +1903,7 @@ static void draw_help_card() {
     "Travel times: real minutes at your speed.",
     "NOTICES: arrivals, incidents and repairs.",
 #if defined(SH_CROSSPOINT)
-    "Hold BACK to quit; voyages wait for you."
+    "Hold BACK to quit; the clock stops."
 #else
     "POWER saves; voyages pause while off."
 #endif

@@ -1,5 +1,5 @@
 // The Sea Atlas: a port's page is charted the first time a company ship
-// docks there. Included by sim.cpp. Rules and text: docs/SEA_ATLAS.md.
+// docks there. Included by sim.cpp; the page text is in atlas_content.h.
 #pragma once
 #include "atlas_content.h"
 

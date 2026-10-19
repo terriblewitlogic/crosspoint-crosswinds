@@ -1,5 +1,7 @@
 #include "CrosswindsActivity.h"
 
+#ifdef CROSSWINDS_ENABLED
+
 #include <HalGPIO.h>
 #include <HalPowerManager.h>
 #include <HalStorage.h>
@@ -8,9 +10,8 @@
 #include <cstdio>
 #include <new>
 
-// Game entry points (lib/Crosswinds/src/crosspoint_main.cpp). The game's
-// headers are not included here: they rename `display`, which CrossPoint
-// also uses, so the two sides only share these plain functions.
+// Game entry points (lib/Crosswinds/src/crosspoint_main.cpp). The game's headers
+// stay out of this file because they rename `display`, which CrossPoint also uses.
 bool crosswinds_start();
 void crosswinds_tick();
 void crosswinds_stop();
@@ -40,8 +41,8 @@ void pushPress(const uint8_t button) {
 
 uint8_t* crosspoint_framebuffer() { return bridgeRenderer ? bridgeRenderer->getFrameBuffer() : nullptr; }
 
-// The game's clean refreshes use CrossPoint's half refresh (~1.7 s), as the
-// reader does; the full waveform takes ~3.8 s and CrossPoint never needs it.
+// Clean refreshes use the half refresh: about 1.7 s on the X4, against about
+// 3.8 s for the full waveform.
 void crosspoint_display_push(const bool full) {
   if (!bridgeRenderer) return;
   bridgeRenderer->displayBuffer(full ? HalDisplay::HALF_REFRESH : HalDisplay::FAST_REFRESH);
@@ -91,9 +92,8 @@ void board_x4_power_off() { exitRequested = true; }
 void board_x4_shutdown() { exitRequested = true; }
 
 // ---------------------------------------------------------------------------
-// The game's save storage (declared in its save_fs.h): files on the SD card in
-// one hidden folder, through HalStorage so card access is serialised with the
-// reader. The game passes rooted names such as "/sh_company.sav".
+// Save storage for the game's save_fs.h: files in one hidden SD folder, through
+// HalStorage so card access is serialized with the reader.
 // ---------------------------------------------------------------------------
 
 struct CrosspointFile {
@@ -197,10 +197,8 @@ void CrosswindsActivity::loop() {
   if (!started) return;
 
   if (leaving) {
-    // Home acts on button releases, and a release is reported only on the
-    // frame it happens. Leave on a frame after every button is up, so the
-    // press that quit cannot select a Home item (reopening the game) or
-    // open the last book.
+    // Home acts on button releases. Wait until every button is up so the press
+    // that quit cannot select the Crosswinds row again or open the last book.
     for (uint8_t b = 0; b < GAME_BUTTONS; ++b) {
       if (gpio.isPressed(b) || gpio.wasReleased(b)) return;
     }
@@ -231,3 +229,5 @@ void CrosswindsActivity::loop() {
   RenderLock lock(*this);
   crosswinds_tick();
 }
+
+#endif  // CROSSWINDS_ENABLED

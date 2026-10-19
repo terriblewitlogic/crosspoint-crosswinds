@@ -43,7 +43,11 @@ same figure for stock CrossPoint was not measured.
 
 The game's largest tables (about 37 KB) are allocated when it opens and freed when
 it closes, so the reader gets that memory back. If the allocation fails, the game
-shows a message instead of opening. Heap use while the game is open has not been measured.
+shows a message instead of opening.
+
+With the game open, free heap measured 98.7 to 101.2 KB on an X4. Closing it returned
+Home to 120.3 KB, 8.7 KB below a fresh boot. That figure was the same after each of two
+open-and-close cycles.
 
 ## Saves
 

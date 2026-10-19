@@ -76,13 +76,17 @@ pio run -e default -t upload        # build and flash over USB
 ```
 
 Use the PlatformIO core that CI pins (pioarduino 6.1.19, see `.github/workflows/ci.yml`);
-stock PlatformIO 6.2.0 failed here with a SCons error. The game is in `lib/Crosswinds`, a copy synced from the game's own repository by
-`scripts/sync_crosswinds.sh`. How the port works is in [docs/CROSSWINDS.md](docs/CROSSWINDS.md).
-The upstream CrossPoint README is kept at [docs/CROSSPOINT_README.md](docs/CROSSPOINT_README.md).
+stock PlatformIO 6.2.0 failed here with a SCons error.
+
+The game is in `lib/Crosswinds`. It is maintained in a separate repository that is not
+public and copied here by `scripts/sync_crosswinds.sh`, so edits to that folder can be
+overwritten. Bug reports for it are welcome here. How the port works is in
+[docs/CROSSWINDS.md](docs/CROSSWINDS.md). The upstream CrossPoint README is kept at
+[docs/CROSSPOINT_README.md](docs/CROSSPOINT_README.md).
 
 ## How it was made
 
-Most of the code and in-game text was written with Claude Code, and the artwork was
+Most of the code and in-game text was written with Claude Code and Codex, and the artwork was
 generated with OpenAI's image tool and reduced to 1-bit. The maintainer directed the
 work and tested it on a device. [NOTICE](NOTICE) has the details and the other credits.
 

@@ -5,8 +5,8 @@ opens from a Home menu entry. Everything else about the firmware is CrossPoint's
 
 ## Layout
 
-- `lib/Crosswinds/src` holds the game. It is a copy: run
-  `scripts/sync_crosswinds.sh /path/to/game-checkout` to refresh it. The script
+- `lib/Crosswinds/src` holds the game. It is a copy of a repository that is not
+  public; `scripts/sync_crosswinds.sh /path/to/game-checkout` refreshes it. The script
   leaves out the other devices' renderers and art, and rewrites the headers of the
   generated art files, whose generator scripts live in the game's repository.
 - `crosspoint_main.cpp` replaces the standalone `ships.ino` and `board_x4.cpp`. It
@@ -24,9 +24,8 @@ sprite (`lib/Crosswinds/src/lgfx_config.h`). Two LovyanGFX behaviors needed work
 - `setBuffer(..., bpp)` does not change the sprite's panel depth, so the depth is
   set first. Without that, the first fill writes past the 48,000-byte buffer.
 - Sprites under 8 bits per pixel copy palette indexes instead of looking up colors,
-  which swapped ink and paper in the art. The shim does its own lookup, and
-  `make -C tools/host crosspoint-blit-test` in the game repository compares it with
-  LovyanGFX's 16-bit path.
+  which swapped ink and paper in the art. The shim does its own lookup, and a host
+  test in the game repository compares it with LovyanGFX's 16-bit path.
 
 Clean refreshes use CrossPoint's half refresh (about 1.7 s on the X4).
 

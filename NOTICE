@@ -28,5 +28,5 @@ Artwork (lib/Crosswinds/src/img_*.h, x4_routes.h)
 
 Code and text
   Most of the Crosswinds code and in-game writing was produced with Claude Code
-  (Anthropic) at the maintainer's direction. The commit history records it in
-  Co-Authored-By trailers.
+  (Anthropic) and Codex (OpenAI) at the maintainer's direction. Commits made
+  with Claude carry Co-Authored-By trailers; Codex's work is not marked that way.

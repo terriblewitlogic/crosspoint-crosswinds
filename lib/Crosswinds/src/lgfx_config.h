@@ -8,7 +8,88 @@
 #endif
 #include <LovyanGFX.hpp>
 
-#if defined(LGFX_SDL)
+#if defined(SH_CROSSPOINT)
+// Inside the CrossPoint reader firmware (checked first so a host test can
+// build this profile with LovyanGFX's SDL platform underneath). The game
+// draws straight into CrossPoint's 800x480 1-bit framebuffer (panel-native,
+// MSB first, white = 1) through a LovyanGFX sprite, and the CrossPoint side
+// pushes it to the panel.
+// CrossPoint already owns a global named `display`, so the game's is renamed;
+// LovyanGFX's own display() member is declared above and keeps its name.
+uint8_t* crosspoint_framebuffer();
+void crosspoint_display_push(bool full);
+
+class LGFX : public lgfx::LGFX_Sprite {
+  lgfx::epd_mode_t mode = lgfx::epd_mode_t::epd_quality;
+ public:
+  bool init() {
+    uint8_t* fb = crosspoint_framebuffer();
+    if (!fb) return false;
+    // setBuffer(..., bpp) only retypes the color converter; the sprite panel
+    // keeps its 16-bit default and would write far past the 48000-byte buffer.
+    // Set the depth while no buffer is attached (so nothing is allocated),
+    // then attach CrossPoint's. 1-bit colors are bit 0: white -> 1.
+    deleteSprite();
+    setColorDepth(lgfx::color_depth_t::grayscale_1bit);
+    setBuffer(fb, 800, 480);
+    return true;
+  }
+  void setAutoDisplay(bool) {}
+  void setEpdMode(lgfx::epd_mode_t m) { mode = m; }
+  lgfx::epd_mode_t getEpdMode() const { return mode; }
+  void cw_display(int32_t, int32_t, int32_t, int32_t) {
+    crosspoint_display_push(mode != lgfx::epd_mode_t::epd_fast);
+  }
+  void cw_display() { cw_display(0, 0, 0, 0); }
+  void waitDisplay() {}
+  bool getTouch(int32_t*, int32_t*) { return false; }  // buttons only
+
+  // LovyanGFX copies palette *indexes* into any sprite under 8 bits per pixel
+  // (pixelcopy_t falls back to copy_bit_affine), which ignores the palette and
+  // swaps ink and paper in the game's art. These replace the two pushImage
+  // forms the renderer uses: look each index up and keep its brightness, as
+  // the e-paper panel's own conversion does. Rows are byte-aligned, as there.
+  void pushImage(int32_t x, int32_t y, int32_t w, int32_t h, const void* data,
+                 lgfx::color_depth_t depth, const lgfx::rgb565_t* palette) {
+    blit(x, y, w, h, static_cast<const uint8_t*>(data), UINT32_MAX, depth, palette);
+  }
+  void pushImage(int32_t x, int32_t y, int32_t w, int32_t h, const void* data, uint32_t transparent,
+                 lgfx::color_depth_t depth, const lgfx::rgb565_t* palette) {
+    blit(x, y, w, h, static_cast<const uint8_t*>(data), transparent, depth, palette);
+  }
+
+ private:
+  static bool dark(const lgfx::rgb565_t& c) {
+    uint32_t rgb = lgfx::color_convert<lgfx::rgb888_t, lgfx::rgb565_t>(c.get());
+    uint32_t luma = ((rgb >> 16) & 0xFF) * 299 + ((rgb >> 8) & 0xFF) * 587 + (rgb & 0xFF) * 114;
+    return luma < 128u * 1000u;
+  }
+  void blit(int32_t x, int32_t y, int32_t w, int32_t h, const uint8_t* data, uint32_t transparent,
+            lgfx::color_depth_t depth, const lgfx::rgb565_t* palette) {
+    const uint32_t bits = depth & lgfx::color_depth_t::bit_mask;
+    if (bits == 0 || bits > 8) return;
+    const uint32_t mask = (1u << bits) - 1, stride = (w * bits + 7) / 8;
+    startWrite();
+    for (int32_t row = 0; row < h; ++row) {
+      const uint8_t* line = data + row * stride;
+      for (int32_t col = 0; col < w; ++col) {
+        uint32_t bit = (uint32_t)col * bits;
+        uint32_t index = (line[bit >> 3] >> (8 - bits - (bit & 7))) & mask;
+        if (index == transparent) continue;
+        drawPixel(x + col, y + row, dark(palette[index]) ? (uint16_t)0x0000 : (uint16_t)0xFFFF);
+      }
+    }
+    endWrite();
+  }
+};
+
+#define display cw_display
+static constexpr int DISPLAY_ROTATION = 0;
+extern LGFX display;
+static inline void board_backlight_begin() {}
+static inline void board_backlight_set(uint8_t) {}
+
+#elif defined(LGFX_SDL)
 #include <lgfx/v1/platforms/sdl/Panel_sdl.hpp>
 
 class LGFX : public lgfx::LGFX_Device {
@@ -53,47 +134,6 @@ static inline void board_backlight_begin() { display.setBrightness(255); }
 static inline void board_backlight_set(uint8_t pct) {
   display.setBrightness((uint32_t)pct * 255 / 100);
 }
-
-#elif defined(SH_CROSSPOINT)
-// Inside the CrossPoint reader firmware. The game draws straight into
-// CrossPoint's 800x480 1-bit framebuffer (panel-native, MSB first, white = 1)
-// through a LovyanGFX sprite, and the CrossPoint side pushes it to the panel.
-// CrossPoint already owns a global named `display`, so the game's is renamed;
-// LovyanGFX's own display() member is declared above and keeps its name.
-uint8_t* crosspoint_framebuffer();
-void crosspoint_display_push(bool full);
-
-class LGFX : public lgfx::LGFX_Sprite {
-  lgfx::epd_mode_t mode = lgfx::epd_mode_t::epd_quality;
- public:
-  bool init() {
-    uint8_t* fb = crosspoint_framebuffer();
-    if (!fb) return false;
-    // setBuffer(..., bpp) only retypes the color converter; the sprite panel
-    // keeps its 16-bit default and would write far past the 48000-byte buffer.
-    // Set the depth while no buffer is attached (so nothing is allocated),
-    // then attach CrossPoint's. 1-bit colors are bit 0: white -> 1.
-    deleteSprite();
-    setColorDepth(lgfx::color_depth_t::grayscale_1bit);
-    setBuffer(fb, 800, 480);
-    return true;
-  }
-  void setAutoDisplay(bool) {}
-  void setEpdMode(lgfx::epd_mode_t m) { mode = m; }
-  lgfx::epd_mode_t getEpdMode() const { return mode; }
-  void cw_display(int32_t, int32_t, int32_t, int32_t) {
-    crosspoint_display_push(mode != lgfx::epd_mode_t::epd_fast);
-  }
-  void cw_display() { cw_display(0, 0, 0, 0); }
-  void waitDisplay() {}
-  bool getTouch(int32_t*, int32_t*) { return false; }  // buttons only
-};
-
-#define display cw_display
-static constexpr int DISPLAY_ROTATION = 0;
-extern LGFX display;
-static inline void board_backlight_begin() {}
-static inline void board_backlight_set(uint8_t) {}
 
 #elif defined(SH_X4)
 #include "x4_pins.h"

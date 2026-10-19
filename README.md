@@ -46,10 +46,10 @@ Then write the firmware at offset `0x10000`, as CrossPoint documents for its own
 esptool.py --chip esp32c3 --port /dev/ttyACM0 --baud 921600 write_flash 0x10000 crosswinds-0.1.0-x3-x4.bin
 ```
 
-I flashed with PlatformIO (`pio run -e default -t upload`), which also writes the
-bootloader and partition table, so this exact command and CrossPoint's
-[web installer](https://crosspointreader.com/#flash-tools) (custom `.bin`) have not
-been tried with this image.
+I tested the `0.1.0rc` file from GitHub with the command above, on an X4 that already
+ran this fork. Flashing over stock Xteink firmware or an unmodified CrossPoint, and
+CrossPoint's [web installer](https://crosspointreader.com/#flash-tools) (custom `.bin`),
+have not been tried.
 
 If your X4 came from a third-party store with USB flashing locked, do not use
 CrossPoint's unlock tool for this firmware. It only supports CrossPoint and CrossInk,

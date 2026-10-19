@@ -33,7 +33,7 @@ Clean refreshes use CrossPoint's half refresh (about 1.7 s on the X4).
 
 Build sizes from `pio run -e gh_release`, for CrossPoint 1.6.5 and for this repository:
 
-| | CrossPoint 1.6.5 | Crosswinds 0.1.0 |
+| | CrossPoint 1.6.5 | Crosswinds 2026.10.0 |
 |---|---|---|
 | Static RAM | 57,904 B | 61,708 B |
 | Flash, of the 6,553,600 B app slot | 5,577,051 B | 6,221,242 B |
@@ -58,8 +58,12 @@ the first start, and the flash copies are renamed `*.imported`.
 ## Updates
 
 `OtaUpdater.cpp` reads `releases/latest` of this repository and looks for the asset
-`crosswinds-<tag>-x3-x4.bin`. Tags are plain versions such as `0.1.0`, and
-`platformio.ini` carries the same number.
+`crosswinds-<tag>-x3-x4.bin`. `platformio.ini` carries the same version as the tag.
+
+Tags are three numbers, as in `2026.10.0` (year, month, release), because the update
+check compares major, minor and patch. CrossPoint owns the `0.x` and `1.x` tags that this
+fork inherited, so ours must not reuse them. Before publishing, check that the tag name
+is free: `gh release create` reuses an existing tag without warning.
 
 ## Staying close to upstream
 

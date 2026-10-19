@@ -7,7 +7,7 @@ and the rest of the firmware are CrossPoint's. The differences are the Home entr
 version number, the HTTP User-Agent, and where the update check looks (this
 repository's releases).
 
-Version 0.1.0 has been tested on one X4, flashed over USB. It has not been tried on an
+Version 2026.10.0 has been tested on one X4, flashed over USB. It has not been tried on an
 X3, X4 Pro or any other board. On an X3 the image hides the game. Expect rough edges.
 
 ## The game
@@ -43,11 +43,11 @@ esptool.py --chip esp32c3 --port /dev/ttyACM0 --baud 921600 read_flash 0x0 0x100
 Then write the firmware at offset `0x10000`, as CrossPoint documents for its own releases:
 
 ```bash
-esptool.py --chip esp32c3 --port /dev/ttyACM0 --baud 921600 write_flash 0x10000 crosswinds-0.1.0-x3-x4.bin
+esptool.py --chip esp32c3 --port /dev/ttyACM0 --baud 921600 write_flash 0x10000 crosswinds-2026.10.0-x3-x4.bin
 ```
 
 I tested the `0.1.0rc` file from GitHub with the command above, on an X4 that already
-ran this fork. Flashing over stock Xteink firmware or an unmodified CrossPoint, and
+ran this fork. That build has the same code as this release and a different version number. Flashing over stock Xteink firmware or an unmodified CrossPoint, and
 CrossPoint's [web installer](https://crosspointreader.com/#flash-tools) (custom `.bin`),
 have not been tried.
 

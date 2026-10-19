@@ -1,6 +1,6 @@
 {
   "name": "Crosswinds",
-  "version": "0.1.0",
+  "version": "2026.10.0",
   "description": "Crosswinds, a literary maritime trading game, built as a CrossPoint activity",
   "frameworks": "arduino",
   "platforms": "espressif32",

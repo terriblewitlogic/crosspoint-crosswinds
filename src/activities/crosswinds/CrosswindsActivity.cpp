@@ -6,9 +6,9 @@
 #include <HalPowerManager.h>
 #include <HalStorage.h>
 #include <Logging.h>
+#include <Memory.h>
 
 #include <cstdio>
-#include <new>
 
 #include "activities/util/ConfirmationActivity.h"
 
@@ -101,6 +101,7 @@ void board_x4_shutdown() { exitRequested = true; }
 // ---------------------------------------------------------------------------
 
 struct CrosspointFile {
+  explicit CrosspointFile(HalFile f) : file(std::move(f)) {}
   HalFile file;
 };
 
@@ -143,10 +144,12 @@ CrosspointFile* crosspoint_fs_open(const char* path, const char* mode) {
   const oflag_t flags = mode[0] == 'w' ? (O_WRONLY | O_CREAT | O_TRUNC) : (mode[1] == '+' ? O_RDWR : O_RDONLY);
   HalFile file = Storage.open(full, flags);
   if (!file) return nullptr;
-  // One handle per open save file, freed by crosspoint_fs_close.
-  auto* handle = new (std::nothrow) CrosspointFile{std::move(file)};
-  if (!handle) LOG_ERR("CW", "OOM opening %s", full);
-  return handle;
+  auto handle = makeUniqueNoThrow<CrosspointFile>(std::move(file));
+  if (!handle) {
+    LOG_ERR("CW", "OOM opening %s", full);
+    return nullptr;
+  }
+  return handle.release();  // freed by crosspoint_fs_close
 }
 
 size_t crosspoint_fs_read(CrosspointFile* file, void* buf, const size_t len) {

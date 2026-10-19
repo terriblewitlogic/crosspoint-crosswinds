@@ -8,6 +8,7 @@
 // is saved on every exit, including when CrossPoint goes to sleep.
 class CrosswindsActivity final : public Activity {
   bool started = false;
+  bool leaving = false;
   unsigned long backDownSince = 0;
 
  public:

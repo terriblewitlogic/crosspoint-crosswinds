@@ -92,6 +92,7 @@ void CrosswindsActivity::onEnter() {
   Activity::onEnter();
   bridgeRenderer = &renderer;
   exitRequested = false;
+  leaving = false;
   queueCount = 0;
   backDownSince = 0;
   {
@@ -116,6 +117,18 @@ void CrosswindsActivity::onExit() {
 void CrosswindsActivity::loop() {
   if (!started) return;
 
+  if (leaving) {
+    // Home acts on button releases, and a release is reported only on the
+    // frame it happens. Leave on a frame after every button is up, so the
+    // press that quit cannot select a Home item (reopening the game) or
+    // open the last book.
+    for (uint8_t b = 0; b < GAME_BUTTONS; ++b) {
+      if (gpio.isPressed(b) || gpio.wasReleased(b)) return;
+    }
+    onGoHome();
+    return;
+  }
+
   for (uint8_t b = 0; b < GAME_BUTTONS; ++b) {
     if (gpio.wasPressed(b)) pushPress(b);
   }
@@ -132,7 +145,7 @@ void CrosswindsActivity::loop() {
 
   if (exitRequested) {
     exitRequested = false;
-    onGoHome();
+    leaving = true;
     return;
   }
 

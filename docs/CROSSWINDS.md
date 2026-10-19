@@ -65,6 +65,16 @@ check compares major, minor and patch. CrossPoint owns the `0.x` and `1.x` tags 
 fork inherited, so ours must not reuse them. Before publishing, check that the tag name
 is free: `gh release create` reuses an existing tag without warning.
 
+## Boot slots
+
+The device has two app slots, at `0x10000` and `0x650000`, and a boot record at `0xe000`
+(two 4 KB entries, each with a sequence number) that says which one runs. The bootloader
+picks the entry with the highest valid sequence number, and an odd number means the first
+slot. An update from Settings or the SD card writes the other slot and then adds a record
+for it, so after one update the device runs from the second slot. Writing the first slot
+with esptool does not change the record, which is why the README says to erase it first.
+To see the state: `esptool.py … read_flash 0xe000 0x2000 otadata.bin`.
+
 ## Staying close to upstream
 
 The fork is based on CrossPoint tag 1.6.5. The changes outside the game are in

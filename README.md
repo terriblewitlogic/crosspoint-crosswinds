@@ -7,8 +7,8 @@ and the rest of the firmware are CrossPoint's. The differences are the Home entr
 version number, the HTTP User-Agent, and where the update check looks (this
 repository's releases).
 
-Version 2026.10.0 has been tested on one X4, flashed over USB. It has not been tried on an
-X3, X4 Pro or any other board. On an X3 the image hides the game. Expect rough edges.
+Version 2026.10.0 has been tested on one X4, flashed over USB and updated over Wi-Fi. It has
+not been tried on an X3, X4 Pro or any other board. On an X3 the image hides the game. Expect rough edges.
 
 ## The game
 
@@ -47,17 +47,35 @@ esptool.py --chip esp32c3 --port /dev/ttyACM0 --baud 921600 write_flash 0x10000 
 ```
 
 I tested the `0.1.0rc` file from GitHub with the command above, on an X4 that already
-ran this fork. That build has the same code as this release and a different version number. Flashing over stock Xteink firmware or an unmodified CrossPoint, and
-CrossPoint's [web installer](https://crosspointreader.com/#flash-tools) (custom `.bin`),
-have not been tried.
+ran this fork, and wrote the 2026.10.0 file the same way afterwards. The release candidate
+has the same code as this release and a different version number. Flashing over stock
+Xteink firmware or an unmodified CrossPoint, and CrossPoint's
+[web installer](https://crosspointreader.com/#flash-tools) (custom `.bin`), have not been
+tried. (Newer esptool versions print a deprecation warning for `write_flash`; it still works.)
+
+**If the device has updated itself before**, from Settings or from the SD card, it may boot
+from the second of its two app slots (each update switches to the other one), and the
+command above writes the first. The old firmware would keep running. Clear the boot
+record first, which makes the device use the first slot again, and then write as above:
+
+```bash
+esptool.py --chip esp32c3 --port /dev/ttyACM0 --baud 921600 erase_region 0xe000 0x2000
+```
+
+I checked this on an X4 that had updated itself: after the erase it came up in the first
+slot, and the file written there then ran. On a device that has never updated the first
+slot is already the one it boots, so the erase should change nothing; that case was not tried.
 
 If your X4 came from a third-party store with USB flashing locked, do not use
 CrossPoint's unlock tool for this firmware. It only supports CrossPoint and CrossInk,
 and flashing anything else on a locked device can leave it stuck. See
 [docs/CROSSPOINT_README.md](docs/CROSSPOINT_README.md#usb-locked-devices-xteink-unlocker).
 
-After the first flash, the update check in Settings reads this repository's releases.
-That path has not been exercised against a published release yet.
+After the first flash, Settings → System → Check for Updates reads this repository's
+releases. I used it once, to go from 0.1.0rc to 2026.10.0 on one X4. It needs a working
+2.4 GHz connection: the X4's radio has no 5 GHz, and over a weak phone hotspot the
+download did not finish. Settings → System → SD Card Firmware Update installs a `.bin`
+from the card without Wi-Fi; I have not tried that one.
 
 ## Going back
 

@@ -7,6 +7,9 @@ and the rest of the firmware are CrossPoint's. The differences are the Home entr
 version number, the HTTP User-Agent, and where the update check looks (this
 repository's releases).
 
+If you would rather not keep a reader on the device, the same game is also available as
+standalone X4 firmware: [terriblewitlogic/crosswinds](https://github.com/terriblewitlogic/crosswinds).
+
 Version 2026.10.0 has been tested on one X4, flashed over USB and updated over Wi-Fi. It has
 not been tried on an X3, X4 Pro or any other board. On an X3 the image hides the game. Expect rough edges.
 
@@ -24,7 +27,8 @@ down the right edge of the screen. From the top they act as UP, DOWN, OK and BAC
 The side rocker flips between ports and pages.
 
 - **Quit:** hold BACK for a second or two and confirm, or choose QUIT in the Company Menu, which does not ask. Both save first.
-- **Time:** ships only move while the game is open. Nothing happens while it is closed.
+- **Time:** in 2026.10.0 ships only move while the game is open. Builds from this repository after
+  that keep ships already at sea sailing while the game is closed, until the reader sleeps or restarts.
 - **Saves:** files in `/.crosspoint/crosswinds` on the SD card. Copy that folder to back up a company.
 - **Input:** buttons only. There is no touch support, sound, or language other than English.
 
@@ -96,9 +100,9 @@ pio run -e default -t upload        # build and flash over USB
 Use the PlatformIO core that CI pins (pioarduino 6.1.19, see `.github/workflows/ci.yml`);
 stock PlatformIO 6.2.0 failed here with a SCons error.
 
-The game is in `lib/Crosswinds`. It is maintained in a separate repository that is not
-public and copied here by `scripts/sync_crosswinds.sh`, so edits to that folder can be
-overwritten. Bug reports for it are welcome here. How the port works is in
+The game is in `lib/Crosswinds`. It is maintained in a private repository and copied here by
+`scripts/sync_crosswinds.sh`, so edits to that folder can be overwritten. The standalone
+firmware linked above is built from the same game code. Bug reports for it are welcome here. How the port works is in
 [docs/CROSSWINDS.md](docs/CROSSWINDS.md). The upstream CrossPoint README is kept at
 [docs/CROSSPOINT_README.md](docs/CROSSPOINT_README.md).
 

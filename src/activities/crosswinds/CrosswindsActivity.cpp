@@ -18,6 +18,10 @@ bool crosswinds_start();
 void crosswinds_tick();
 void crosswinds_resume();
 void crosswinds_stop();
+#if defined(SH_TOUCH_UI)
+void crosswinds_touch_tap(int x, int y);
+void crosswinds_touch_swipe(int startX, int startY, int endX, int endY);
+#endif
 
 namespace {
 
@@ -176,6 +180,9 @@ void crosspoint_fs_close(CrosspointFile* file) {
 
 void CrosswindsActivity::onEnter() {
   Activity::onEnter();
+#if defined(SH_TOUCH_UI)
+  gpio.suppressTouchContact();
+#endif
   bridgeRenderer = &renderer;
   exitRequested = false;
   asking = false;
@@ -184,6 +191,8 @@ void CrosswindsActivity::onEnter() {
   backHold.reset();
   {
     RenderLock lock(*this);
+    previousOrientation = renderer.getOrientation();
+    renderer.setOrientation(GfxRenderer::LandscapeCounterClockwise);
     started = crosswinds_start();
   }
   if (!started) {
@@ -198,7 +207,15 @@ void CrosswindsActivity::onExit() {
   started = false;
   bridgeRenderer = nullptr;
   queueCount = 0;
+  renderer.setOrientation(previousOrientation);
   Activity::onExit();
+}
+
+void CrosswindsActivity::render(RenderLock&&) {
+  if (!started) return;
+  renderer.setOrientation(GfxRenderer::LandscapeCounterClockwise);
+  // A popped frontlight panel or dialog has overwritten the shared buffer.
+  crosswinds_resume();
 }
 
 void CrosswindsActivity::onQuitAnswer(const ActivityResult& result) {
@@ -235,9 +252,17 @@ void CrosswindsActivity::loop() {
     return;
   }
 
+#if defined(SH_TOUCH_UI)
+  using Button = MappedInputManager::Button;
+  if (mappedInput.wasPressed(Button::Back)) pushPress(HalGPIO::BTN_BACK);
+  if (mappedInput.wasPressed(Button::Confirm)) pushPress(HalGPIO::BTN_CONFIRM);
+  if (mappedInput.wasPressed(Button::PageBack)) pushPress(HalGPIO::BTN_LEFT);
+  if (mappedInput.wasPressed(Button::PageForward)) pushPress(HalGPIO::BTN_RIGHT);
+#else
   for (uint8_t b = 0; b < GAME_BUTTONS; ++b) {
     if (gpio.wasPressed(b)) pushPress(b);
   }
+#endif
 
   if (backHold.update(gpio.isPressed(HalGPIO::BTN_BACK), millis(), EXIT_HOLD_MS, HOLD_STEP_CAP_MS)) {
     backHold.reset();
@@ -252,6 +277,20 @@ void CrosswindsActivity::loop() {
   }
 
   RenderLock lock(*this);
+#if defined(SH_TOUCH_UI)
+  if (!mappedInput.wasBackGesture()) {
+    int x = 0, y = 0;
+    float startX = 0, startY = 0, endX = 0, endY = 0;
+    if (mappedInput.wasScreenTapped(x, y)) {
+      crosswinds_touch_tap(x, y);
+    } else if (gpio.wasSwipe(startX, startY, endX, endY)) {
+      int sx = 0, sy = 0, ex = 0, ey = 0;
+      renderer.tapToLogical(startX, startY, sx, sy);
+      renderer.tapToLogical(endX, endY, ex, ey);
+      crosswinds_touch_swipe(sx, sy, ex, ey);
+    }
+  }
+#endif
   crosswinds_tick();
 }
 

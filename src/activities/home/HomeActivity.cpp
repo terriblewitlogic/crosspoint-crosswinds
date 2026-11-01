@@ -28,11 +28,14 @@
 #include "components/UITheme.h"
 #include "fontIds.h"
 
-// Crosswinds is drawn for the X4's 800x480 panel and buttons, so the X3 build of
-// the shared image does not offer it.
+// Crosswinds uses the X4 / X4 Pro 800x480 panel. The shared C3 image hides it on X3.
 static bool crosswindsAvailable() {
 #ifdef CROSSWINDS_ENABLED
+#if defined(FREEINK_DEVICE_X4PRO)
+  return true;
+#else
   return gpio.deviceIsX4();
+#endif
 #else
   return false;
 #endif

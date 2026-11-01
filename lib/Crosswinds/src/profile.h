@@ -6,3 +6,10 @@
 // #define SH_X4      // Xteink X4: ESP32-C3, 4.26" 800x480 e-paper, buttons
 // #define SH_HIRES   // 800x480 presentation profile (desktop preview)
 // #define SH_EINK    // M5Stack PaperColor experiment (desktop preview)
+
+// Shared touch wording from the ESP32 panel port.
+#if defined(SH_TOUCH_UI)
+#define SH_UI_TEXT(keys, touch) touch
+#else
+#define SH_UI_TEXT(keys, touch) keys
+#endif

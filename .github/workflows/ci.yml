@@ -83,11 +83,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Only the X4 image carries the game. The release workflow publishes it
-        # as crosswinds-<version>-x3-x4.bin.
+        # Build both MCU families with their device-specific game controls.
         include:
           - env: default
             asset: firmware.bin
+          - env: x4pro
+            asset: firmware-x4pro.bin
     steps:
       - uses: actions/checkout@v6
         with:

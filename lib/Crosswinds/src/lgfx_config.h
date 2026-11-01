@@ -40,7 +40,7 @@ class LGFX : public lgfx::LGFX_Sprite {
   }
   void cw_display() { cw_display(0, 0, 0, 0); }
   void waitDisplay() {}
-  bool getTouch(int32_t*, int32_t*) { return false; }  // buttons only
+  bool getTouch(int32_t*, int32_t*) { return false; }  // CrossPoint forwards classified touch events.
 
   // LovyanGFX copies palette indexes into sprites under 8 bpp, ignoring the
   // palette and swapping ink and paper in the art. These two pushImage forms

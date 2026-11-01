@@ -16,12 +16,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Crosswinds ships for the Xteink X4 only; the x3-x4 image is the
-        # one the X4 runs, and the X3 build of it hides the game.
+        # The X3/X4 image hides the game on X3; Pro uses a separate S3 image.
         include:
           - release_env: gh_release
             rc_env: gh_release_rc
             device: x3-x4
+          - release_env: x4pro-gh_release
+            rc_env: x4pro-gh_release_rc
+            device: x4pro
     steps:
       - uses: actions/checkout@v6
         with:
@@ -118,6 +120,7 @@ jobs:
         run: |
           version="${RELEASE_TAG#v}"
           test -f "dist/crosswinds-${version}-x3-x4.bin"
-          test "$(find dist -maxdepth 1 -type f -name 'crosswinds-*.bin' | wc -l)" -eq 1
+          test -f "dist/crosswinds-${version}-x4pro.bin"
+          test "$(find dist -maxdepth 1 -type f -name 'crosswinds-*.bin' | wc -l)" -eq 2
           gh release upload "$RELEASE_TAG" dist/crosswinds-*.bin \
             --repo "$GITHUB_REPOSITORY" --clobber

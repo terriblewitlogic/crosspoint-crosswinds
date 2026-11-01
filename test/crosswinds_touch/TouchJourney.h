@@ -101,6 +101,21 @@ static bool run_crosswinds_touch_test() {
   frame();
   tap(x4_onboarding_button_region(3));
   if (!check(sim_onboarding_step() == ONBOARD_DONE, "Skip starts a free company")) return false;
+  g_campaign.legacyFeatureMask = 0xffff;
+  g_campaign.coins = 10000;
+  g_ui.title = false;
+  g_ui.scene = SCENE_PORT;
+  g_ui.card = CARD_SHIPYARD;
+  g_ui.page = 2;
+  g_ui.selectedPort = g_ships[0].currentPort;
+  g_ui.noticeCode = SIM_OK;
+  g_ports[g_ui.selectedPort].warehouseLevel = 0;
+  frame();
+  const auto pushes = render_host_push_count();
+  tap(CARD_ROWS[1]);
+  if (!check(g_ports[g_ui.selectedPort].warehouseLevel == 1 && render_host_push_count() > pushes,
+             "warehouse purchase immediately repaints the new level and price"))
+    return false;
   printf("touch: PASS (%d checks)\n", checks);
   return true;
 }

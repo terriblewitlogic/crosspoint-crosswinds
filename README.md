@@ -47,7 +47,7 @@ See [port and source-sync notes](docs/CROSSWINDS.md) and [touch tests](test/cros
 
 ## Related projects
 
-- [Crosswinds](https://github.com/terriblewitlogic/crosswinds): standalone X4 firmware.
+- [Crosswinds](https://github.com/terriblewitlogic/crosswinds): standalone X4 and X4 Pro firmware.
 - [Crosswinds ESP32](https://github.com/terriblewitlogic/crosswinds-esp32): ESP32 touchscreen version; source of the Pro touch controls.
 
 MIT. See [LICENSE](LICENSE) and [NOTICE](NOTICE) for credits and AI assistance disclosures.

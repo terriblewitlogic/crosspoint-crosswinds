@@ -2894,6 +2894,7 @@ void input_update() {
 // cannot also activate the button where it started.
 void crosswinds_touch_tap(int x, int y) {
   if (x < 0 || x >= IW || y < 0 || y >= IH) return;
+  x4InputPending = true;
   handle_touch(x, y);
   if (mapTouchActive) handle_map_touch_release();
 }

@@ -1884,7 +1884,7 @@ static void draw_help_card() {
       "Parcels are free; one space each.",
       "Hazards use the shown safe fallback.",
 #if defined(SH_CROSSPOINT)
-      "Hold BACK to quit; the clock stops."
+      SH_UI_TEXT("Hold BACK to save and return Home.", "Company Menu: QUIT saves and returns Home.")
 #elif SH_X4_VOYAGE_STANDBY
       "POWER: voyages continue in standby."
 #else
@@ -1906,7 +1906,7 @@ static void draw_help_card() {
     "Travel times: real minutes at your speed.",
     "NOTICES: arrivals, incidents and repairs.",
 #if defined(SH_CROSSPOINT)
-    "Hold BACK to quit; the clock stops."
+    SH_UI_TEXT("Hold BACK to save and return Home.", "Company Menu: QUIT saves and returns Home.")
 #else
     "POWER saves; voyages pause while off."
 #endif
@@ -2130,7 +2130,13 @@ static void draw_tutorial_card() {
       {"Your ship starts with 2 Grain, a gift.","Open your ship, then TRADE > SELL.",SH_UI_TEXT("OK selects. Up/down sets quantity. OK sells.", "Tap the good, set the amount, tap SELL.")},
       {SH_UI_TEXT("Rocker: Buy / Sell / Parcels.", "Tabs: Buy / Sell / Parcels."),"Buy goods this port MAKES.","Sell at a port that WANTS them for more."},
       {"BACK to your ship, then choose SAIL.","Compare what each port wants and pays.","Choose a port, review, then confirm."},
-      {"WATCH follows your boat across the sea.","Travel continues while the device sleeps.","Unanswered incidents take the free safe option."},
+      {"WATCH follows your boat across the sea.",
+#if defined(SH_CROSSPOINT) || !SH_X4_VOYAGE_STANDBY
+      "Voyages pause while the device sleeps.",
+#else
+      "Travel continues while the device sleeps.",
+#endif
+      "Unanswered incidents take the free safe option."},
       {"Arrival leaves your goods aboard.","Open TRADE > SELL when the price suits you.","Sell one unit, several, or keep them all."},
       {"A parcel is free to accept and uses one slot.","It pays automatically at its named port.","Start with a small trade. Grow your fleet."}
     };

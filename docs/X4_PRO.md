@@ -39,7 +39,10 @@ save reload and skipping the tutorial. Its source is in `test/crosswinds_touch`.
 
 No X4 Pro hardware was available for testing. Check touch alignment, display
 refresh, side keys, Home/quit, sleep and reopening after the frontlight panel on
-the device before publishing this as a tested release.
+the device before publishing this as a tested release. Open the game from each
+reader orientation (portrait, inverted portrait, landscape clockwise and
+counterclockwise): it should use landscape and restore the reader orientation
+on exit. Repeat entry/exit and check that free memory does not steadily decrease.
 
 ## Build
 
@@ -49,4 +52,4 @@ pio run -e x4pro-gh_release
 ```
 
 Output: `.pio/build/x4pro-gh_release/firmware.bin`. Use the pioarduino core pinned
-in CI. The SDK remains pinned to `111fdcc7f0176c3ee38391a160ee296bf492dbd8`.
+in CI. The SDK remains pinned to `5e94fe7480f019c89fbf691aef87523eb1b46704`.

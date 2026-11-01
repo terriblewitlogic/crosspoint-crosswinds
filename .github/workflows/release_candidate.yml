@@ -12,6 +12,8 @@ jobs:
         include:
           - pio_env: gh_release_rc
             asset: firmware.bin
+          - pio_env: x4pro-gh_release_rc
+            asset: firmware-x4pro.bin
     steps:
       - uses: actions/checkout@v6
         with:
@@ -42,7 +44,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.platformio
-          key: pio-v2-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+          key: pio-v2-${{ runner.os }}-${{ hashFiles('platformio.ini', 'scripts/patch_pioarduino_cache.py') }}
           restore-keys: pio-v2-${{ runner.os }}-
 
       - name: Pin pioarduino core inside the platform penv

@@ -256,8 +256,8 @@ void CrosswindsActivity::loop() {
   using Button = MappedInputManager::Button;
   if (mappedInput.wasPressed(Button::Back)) pushPress(HalGPIO::BTN_BACK);
   if (mappedInput.wasPressed(Button::Confirm)) pushPress(HalGPIO::BTN_CONFIRM);
-  if (mappedInput.wasPressed(Button::PageBack)) pushPress(HalGPIO::BTN_LEFT);
-  if (mappedInput.wasPressed(Button::PageForward)) pushPress(HalGPIO::BTN_RIGHT);
+  if (mappedInput.wasPressed(Button::PageBack)) pushPress(HalGPIO::BTN_UP);
+  if (mappedInput.wasPressed(Button::PageForward)) pushPress(HalGPIO::BTN_DOWN);
 #else
   for (uint8_t b = 0; b < GAME_BUTTONS; ++b) {
     if (gpio.wasPressed(b)) pushPress(b);

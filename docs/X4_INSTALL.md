@@ -57,4 +57,3 @@ from the card without Wi-Fi; I have not tried that one.
   card, and the Crosswinds folder is left in place unused.
 - **To what you had before:** write the backup, `write_flash 0x0 backup.bin`. This has
   not been tested here.
-

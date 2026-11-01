@@ -2,13 +2,17 @@
 
 Crosswinds is a maritime trading game for the Xteink X4 e-reader. This repository is
 a fork of [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader)
-1.6.5 that adds the game as the last entry on the Home screen. Reading, the library
+2.0.0 that adds the game as the last entry on the Home screen. Reading, the library
 and the rest of the firmware are CrossPoint's. The differences are the Home entry, the
 version number, the HTTP User-Agent, and where the update check looks (this
 repository's releases).
 
 If you would rather not keep a reader on the device, the same game is also available as
 standalone X4 firmware: [terriblewitlogic/crosswinds](https://github.com/terriblewitlogic/crosswinds).
+
+The 2026.11.0 development build ports the game to CrossPoint 2.0.0. It has not yet
+been tested on hardware or published as a release. The latest published release is
+2026.10.0, based on CrossPoint 1.6.5.
 
 Version 2026.10.0 has been tested on one X4, flashed over USB and updated over Wi-Fi. It has
 not been tried on an X3, X4 Pro or any other board. On an X3 the image hides the game. Expect rough edges.
@@ -100,7 +104,7 @@ pio run -e default -t upload        # build and flash over USB
 Use the PlatformIO core that CI pins (pioarduino 6.1.19, see `.github/workflows/ci.yml`);
 stock PlatformIO 6.2.0 failed here with a SCons error.
 
-The game is in `lib/Crosswinds`. It is maintained in a private repository and copied here by
+The game is in `lib/Crosswinds`. It is maintained in [terriblewitlogic/crosswinds](https://github.com/terriblewitlogic/crosswinds) and copied here by
 `scripts/sync_crosswinds.sh`, so edits to that folder can be overwritten. The standalone
 firmware linked above is built from the same game code. Bug reports for it are welcome here. How the port works is in
 [docs/CROSSWINDS.md](docs/CROSSWINDS.md). The upstream CrossPoint README is kept at

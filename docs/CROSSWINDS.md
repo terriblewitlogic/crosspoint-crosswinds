@@ -5,8 +5,7 @@ opens from a Home menu entry. Everything else about the firmware is CrossPoint's
 
 ## Layout
 
-- `lib/Crosswinds/src` holds the game. It is a copy of a repository that is not
-  public; `scripts/sync_crosswinds.sh /path/to/game-checkout` refreshes it. The script
+- `lib/Crosswinds/src` holds the game. It is a copy of [terriblewitlogic/crosswinds](https://github.com/terriblewitlogic/crosswinds); `scripts/sync_crosswinds.sh /path/to/game-checkout` refreshes it. The script
   leaves out the other devices' renderers and art, and rewrites the headers of the
   generated art files, whose generator scripts live in the game's repository.
 - `crosspoint_main.cpp` replaces the standalone `ships.ino` and `board_x4.cpp`. It
@@ -31,14 +30,14 @@ Clean refreshes use CrossPoint's half refresh (about 1.7 s on the X4).
 
 ## Memory
 
-Build sizes from `pio run -e gh_release`, for CrossPoint 1.6.5 and for this repository:
+Historical build sizes from `pio run -e gh_release`, measured before the 2.0.0 port:
 
 | | CrossPoint 1.6.5 | Crosswinds 2026.10.0 |
 |---|---|---|
 | Static RAM | 57,904 B | 61,708 B |
 | Flash, of the 6,553,600 B app slot | 5,577,051 B | 6,221,242 B |
 
-Free heap on the Home screen was 128,980 B on a `default` build running on an X4. The
+On the 1.6.5-based build, free heap on the Home screen was 128,980 B on a `default` build running on an X4. The
 same figure for stock CrossPoint was not measured.
 
 The game's largest tables (about 37 KB) are allocated when it opens and freed when
@@ -48,6 +47,9 @@ shows a message instead of opening.
 With the game open, free heap measured 98.7 to 101.2 KB on an X4. Closing it returned
 Home to 120.3 KB, 8.7 KB below a fresh boot. That figure was the same after each of two
 open-and-close cycles.
+
+The 2.0.0 port's build measurements, local checks, and pending device checks are
+recorded in [PORT_2_0_VALIDATION.md](PORT_2_0_VALIDATION.md).
 
 ## Saves
 
@@ -61,8 +63,8 @@ the first start, and the flash copies are renamed `*.imported`.
 `crosswinds-<tag>-x3-x4.bin`. `platformio.ini` carries the same version as the tag.
 
 Tags are three numbers, as in `2026.10.0` (year, month, release), because the update
-check compares major, minor and patch. CrossPoint owns the `0.x` and `1.x` tags that this
-fork inherited, so ours must not reuse them. Before publishing, check that the tag name
+check compares major, minor and patch. CrossPoint owns the upstream version tags that this
+fork imports, so ours must not reuse them. Before publishing, check that the tag name
 is free: `gh release create` reuses an existing tag without warning.
 
 ## Boot slots
@@ -77,6 +79,6 @@ To see the state: `esptool.py … read_flash 0xe000 0x2000 otadata.bin`.
 
 ## Staying close to upstream
 
-The fork is based on CrossPoint tag 1.6.5. The changes outside the game are in
+The fork is based on CrossPoint tag 2.0.0 (`42d58daa`). The changes outside the game are in
 `HomeActivity`, `ActivityManager`, `OtaUpdater`, `HttpDownloader`, `platformio.ini`
 and the GitHub workflows, so merges from upstream should touch few files.

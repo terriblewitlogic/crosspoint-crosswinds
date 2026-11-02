@@ -39,8 +39,7 @@ OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
   }
   ReleaseJsonParser& releaseParser = *releaseParserPtr;
   releaseParser.setFirmwareAssetName("");
-  // Releases attach crosswinds-<version>-x3-x4.bin. Only this combined C3 image
-  // is published; other boards are never offered an update from this repository.
+  // Asset suffixes keep the X3/X4 C3 image separate from the X4 Pro S3 image.
   const bool isX4 = board_tag::boardNameLen() == 2 && memcmp(board_tag::boardName(), "x4", 2) == 0;
   char assetSuffix[20] = "-x3-x4";
   if (!isX4) {

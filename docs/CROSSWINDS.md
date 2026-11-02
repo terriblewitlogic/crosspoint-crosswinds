@@ -12,8 +12,23 @@ opens from a Home menu entry. Everything else about the firmware is CrossPoint's
   exposes `crosswinds_start()`, `crosswinds_tick()` and `crosswinds_stop()`.
 - `CrosswindsActivity.cpp` supplies what the game expects from its board layer:
   the framebuffer, button events, battery and USB state, and file storage.
-- The game is compiled only into the `default`, `gh_release` and `gh_release_rc`
-  images (`-DCROSSWINDS_ENABLED=1`), and Home shows the entry only on an X4.
+- The game is compiled into `default`, `gh_release`, `gh_release_rc` and the three
+  `x4pro` environments (`-DCROSSWINDS_ENABLED=1`). Home shows it on X4 and X4 Pro.
+  The Pro also defines `SH_TOUCH_UI`; the SDK owns its display and touch drivers.
+
+## X4 Pro input
+
+The touch UI reuses captain selection, trade quantity buttons and labels from
+`crosswinds-esp32` commit `047d308353a1367b08a58326b90f5cd2175f1ee9`.
+`CrosswindsActivity` forwards completed SDK taps and swipes to the game, using
+the renderer's panel-aligned landscape coordinates. A swipe never also taps its
+starting point. CrossPoint retains Home, sleep and frontlight gestures.
+
+The activity restores the previous orientation on exit and requests a game repaint
+after a reader popup closes. No TFT display driver is included.
+
+These touch changes currently live in this fork's `lib/Crosswinds/src`; merge them
+into the game source before running `sync_crosswinds.sh`, which replaces that folder.
 
 ## Display
 
@@ -60,7 +75,9 @@ the first start, and the flash copies are renamed `*.imported`.
 ## Updates
 
 `OtaUpdater.cpp` reads `releases/latest` of this repository and looks for the asset
-`crosswinds-<tag>-x3-x4.bin`. `platformio.ini` carries the same version as the tag.
+`crosswinds-<tag>-x3-x4.bin` or `crosswinds-<tag>-x4pro.bin`, according to the board.
+`platformio.ini` carries the same version as the tag. CI and release builds include
+both targets. The Pro is initially distributed in the `2026.11.0rc` prerelease; the stable X4 release remains available.
 
 Tags are three numbers, as in `2026.10.0` (year, month, release), because the update
 check compares major, minor and patch. CrossPoint owns the upstream version tags that this

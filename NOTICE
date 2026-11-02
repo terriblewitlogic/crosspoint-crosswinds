@@ -4,7 +4,7 @@ what it does not.
 
 CrossPoint Reader
   Everything outside lib/Crosswinds and src/activities/crosswinds is CrossPoint
-  Reader 1.6.5, MIT licensed, Copyright (c) 2025 CrossPoint Reader organization.
+  Reader 2.0.0, MIT licensed, Copyright (c) 2025 CrossPoint Reader organization.
   https://github.com/crosspoint-reader/crosspoint-reader
   CrossPoint's own third-party notices (including freeink-sdk/NOTICE) apply.
 
@@ -12,7 +12,7 @@ LovyanGFX
   The game draws through LovyanGFX 1.2.24, fetched by PlatformIO at build time and
   linked into the firmware. Its library manifest declares MIT and BSD-2-Clause;
   see https://github.com/lovyan03/LovyanGFX for the license texts.
-  Four of its bundled fonts are used (FreeSans 12pt, FreeSansBold 18pt and 24pt,
+  Its bundled fonts are used (FreeSans 9pt and 12pt, FreeSansBold 18pt and 24pt,
   FreeSerifBold 24pt). These are GNU FreeFont faces in the Adafruit GFX format,
   distributed under the GNU GPL with the FreeFont font-embedding exception.
 
